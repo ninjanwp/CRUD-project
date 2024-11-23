@@ -10,16 +10,17 @@ const PORT = 5001; // Port for the server
 app.use(cors()); // Allow requests from React
 app.use(bodyParser.json()); // Parse JSON requests
 
-// SQL Server configuration
+require("dotenv").config();
+
 const dbConfig = {
-  user: "root", // Replace with your SQL Server login
-  password: "1574", // Replace with your SQL Server password
-  server: "NP-ITX-12", // Replace with your server address or IP
-  database: "Shop", // Replace with your database name
-  options: {
-    encrypt: true, // Use if needed for Azure
-    trustServerCertificate: true, // Use for self-signed certificates
-  },
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    server: process.env.DB_SERVER,
+    database: process.env.DB_DATABASE,
+        options: {
+        encrypt: true,
+        trustServerCertificate: true,
+        },
 };
 
 // Test database connection
