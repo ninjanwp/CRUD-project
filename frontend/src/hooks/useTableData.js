@@ -45,9 +45,11 @@ const useTableData = (endpoint, defaultItemsPerPage = 10) => {
     setCurrentPage(1);
   }, [data]);
 
-  const handleSort = useCallback((field, direction) => {
-    setSortField(field);
-    setSortDirection(direction);
+  const handleSort = useCallback((sortValue) => {
+    if (!sortValue) return;
+    
+    // Parse the sort value string (e.g., "price-asc" -> { field: "price", direction: "asc" })
+    const [field, direction] = sortValue.split('-');
     
     const sortedData = [...filteredData].sort((a, b) => {
       let aValue = a[field];

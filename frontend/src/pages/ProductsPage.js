@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Button } from "react-bootstrap";
 import DataTable from "../components/common/DataTable";
 import useTableData from "../hooks/useTableData";
@@ -85,8 +85,10 @@ const ProductsPage = () => {
   const sortOptions = [
     { field: "name", direction: "asc", label: "Name (A-Z)" },
     { field: "name", direction: "desc", label: "Name (Z-A)" },
-    { field: "price", direction: "asc", label: "Price (Low-High)" },
     { field: "price", direction: "desc", label: "Price (High-Low)" },
+    { field: "price", direction: "asc", label: "Price (Low-High)" },
+    { field: "stock", direction: "desc", label: "Stock (High-Low)" },
+    { field: "stock", direction: "asc", label: "Stock (Low-High)" }
   ];
 
   const handleAdd = () => {

@@ -80,11 +80,17 @@ const DataTable = ({
         <div className="d-flex justify-content-between align-items-center mb-3">
           <Form.Select 
             className="w-auto"
-            onChange={(e) => onSort(e.target.value)}
+            onChange={(e) => {
+              console.log('Sort value:', e.target.value);
+              onSort(e.target.value);
+            }}
           >
             <option value="">Sort by...</option>
             {sortOptions.map((option) => (
-              <option key={`${option.field}-${option.direction}`} value={`${option.field}-${option.direction}`}>
+              <option 
+                key={`${option.field}-${option.direction}`} 
+                value={`${option.field}-${option.direction}`}
+              >
                 {option.label}
               </option>
             ))}
@@ -149,7 +155,7 @@ const DataTable = ({
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
             >
-              {[10, 25, 50, 100].map((value) => (
+              {[5, 10, 20, 40, 80].map((value) => (
                 <option key={value} value={value}>
                   {value}
                 </option>
