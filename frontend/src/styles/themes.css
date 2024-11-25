@@ -1,0 +1,29 @@
+/* Light theme (default) */
+:root {
+  --bg-primary: #f8f9fa;
+  --bg-secondary: #ffffff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a5568;
+  --border-color: #e2e8f0;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --input-border: #e2e8f0;
+  --table-stripe: #f8f9fa;
+  --table-hover: #f3f4f6;
+}
+
+/* Dark theme */
+[data-theme='dark'] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --text-primary: #ffffff;
+  --text-secondary: #a0aec0;
+  --border-color: #4a5568;
+  --card-bg: #2d2d2d;
+  --input-bg: #1a1a1a;
+  --input-border: #4a5568;
+  --table-stripe: #262626;
+  --table-hover: #333333;
+  --primary-color: #4f46e5;
+  --primary-hover: #4338ca;
+} 
