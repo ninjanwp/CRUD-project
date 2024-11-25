@@ -4,7 +4,12 @@ import { Link, NavLink } from 'react-router-dom';
 
 const NavigationBar = () => {
   return (
-    <Navbar bg="dark" variant="dark" expand="lg">
+    <Navbar 
+      variant="dark"
+      expand="lg" 
+      fixed="top" 
+      className="shadow navbar-custom"
+    >
       <Container>
         <Navbar.Brand as={Link} to="/">
           <i className="bi bi-shop me-2"></i>

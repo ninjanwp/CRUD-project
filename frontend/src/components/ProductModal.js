@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, Modal, Row, Col } from "react-bootstrap";
-import '../styles/Modal.css';
 
 const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -41,15 +40,15 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
 
   if (showDeleteConfirm) {
     return (
-      <Modal show={true} onHide={() => setShowDeleteConfirm(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <i className="bi bi-exclamation-triangle-fill me-2 text-danger"></i>
-            Confirm Delete
-          </Modal.Title>
+      <Modal show={true} onHide={() => setShowDeleteConfirm(false)} animation={true} className="fade">
+        <Modal.Header closeButton className="border-0 pb-0">
         </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete "{formData.name}"?
+        <Modal.Body className="text-center pt-0">
+          <div className="display-1 text-danger mb-4">
+            <i className="bi bi-exclamation-triangle-fill"></i>
+          </div>
+          <h4 className="mb-4">Confirm Delete</h4>
+          <p>Are you sure you want to delete "{formData.name}"?</p>
         </Modal.Body>
         <Modal.Footer>
           <div className="w-100 d-flex justify-content-between">
@@ -67,7 +66,7 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
   }
 
   return (
-    <Modal show={show} onHide={onClose}>
+    <Modal show={show} onHide={onClose} animation={true} className="fade">
       <Modal.Header closeButton>
         <Modal.Title>
           <i className={`bi bi-${isEditMode ? 'pencil-square' : 'plus-lg'} me-2`}></i>

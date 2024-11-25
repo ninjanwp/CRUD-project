@@ -16,6 +16,8 @@ const ProductsPage = () => {
     handleSort,
     handleSearch,
     refreshData,
+    sortField,
+    sortOrder,
   } = useTableData("products");
 
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -24,30 +26,6 @@ const ProductsPage = () => {
   const [editProduct, setEditProduct] = useState(null);
 
   const columns = [
-    {
-      field: "select",
-      label: (
-        <input
-          type="checkbox"
-          checked={data.length > 0 && selectedProducts.length === data.length}
-          onChange={(e) => {
-            if (e.target.checked) {
-              setSelectedProducts(data.map((item) => item.id));
-            } else {
-              setSelectedProducts([]);
-            }
-          }}
-        />
-      ),
-      format: (value, item) => (
-        <input
-          type="checkbox"
-          checked={selectedProducts.includes(item.id)}
-          onChange={() => {}} // Handle change in row click
-          onClick={(e) => e.stopPropagation()}
-        />
-      ),
-    },
     { field: "id", label: "ID" },
     { field: "name", label: "Name" },
     { field: "description", label: "Description" },
@@ -155,20 +133,21 @@ const ProductsPage = () => {
   return (
     <>
       <DataTable
-        title={
-          <>
-            <i className="bi bi-box-seam me-2"></i>
-            Products
-          </>
-        }
+        title={<><i className="bi bi-box-seam me-2"></i>Products</>}
+        columns={columns}
+        data={data}
         actionButton={
-          <Button variant="outline-primary" className="d-inline-flex align-items-center" onClick={handleAdd}>
+          <Button 
+            variant="outline-primary" 
+            onClick={() => setShowAddModal(true)}
+            className="d-inline-flex align-items-center"
+          >
             <i className="bi bi-plus-lg me-2"></i>
             Add Product
           </Button>
         }
-        columns={columns}
-        data={data}
+        selectedProducts={selectedProducts}
+        onDeleteSelected={handleDeleteSelected}
         currentPage={currentPage}
         itemsPerPage={itemsPerPage}
         totalPages={totalPages}
@@ -177,9 +156,12 @@ const ProductsPage = () => {
         onSort={handleSort}
         sortOptions={sortOptions}
         onSearch={handleSearch}
-        selectedProducts={selectedProducts}
-        setSelectedProducts={setSelectedProducts}
         onRowClick={handleRowClick}
+        sortField={sortField}
+        sortOrder={sortOrder}
+        selectable={true}
+        selectedItems={selectedProducts}
+        onSelectionChange={setSelectedProducts}
       />
 
       <ProductModal

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Row, Col, Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import '../styles/Home.css';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -41,16 +40,16 @@ const Home = () => {
           {modules.map((module, index) => (
             <Col md={4} key={index}>
               <Card 
-                className="dashboard-card mb-4 h-100 shadow-sm" 
+                className="dashboard-card mb-4 h-100 shadow-sm fade show" 
                 onClick={() => navigate(module.path)}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', transition: 'all .2s ease-in-out' }}
               >
                 <Card.Body className="d-flex flex-column">
                   <div className={`text-${module.color} mb-3`}>
                     <i className={`bi ${module.icon} display-4`}></i>
                   </div>
                   <Card.Title className="mt-3">{module.title}</Card.Title>
-                  <Card.Text className="flex-grow-1">
+                  <Card.Text className=" text-muted flex-grow-1">
                     {module.description}
                   </Card.Text>
                   <div className={`text-${module.color} mt-3`}>

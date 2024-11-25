@@ -2,7 +2,6 @@ import { Container, Navbar, Nav, Button, Dropdown } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
-import '../styles/Layout.css';
 
 const Layout = ({ children }) => {
   const { logout, user } = useAuth();
@@ -17,31 +16,32 @@ const Layout = ({ children }) => {
   return (
     <div>
       <Navbar 
-        bg="dark" 
         variant="dark"
-        expand="lg" fixed="top" className="shadow"
+        expand="lg" 
+        fixed="top" 
+        className="shadow navbar-custom"
       >
         <Container fluid className="px-4">
           <Navbar.Brand as={Link} to="/dashboard">Admin Dashboard</Navbar.Brand>
           <Navbar.Toggle />
-          <Navbar.Collapse>
+          <Navbar.Collapse className="collapse">
             <Nav className="me-auto">
-              <Nav.Link as={Link} to="/dashboard" className="nav-link-animated me-2">
+              <Nav.Link as={Link} to="/dashboard" className="me-2">
                 <i className="bi bi-house-door me-2"></i>
                 Dashboard
               </Nav.Link>
               <div className="nav-divider"></div>
-              <Nav.Link as={Link} to="/products" className="nav-link-animated me-2">
+              <Nav.Link as={Link} to="/products" className="me-2">
                 <i className="bi bi-box-seam me-2"></i>
                 Products
               </Nav.Link>
               <div className="nav-divider"></div>
-              <Nav.Link as={Link} to="/orders" className="nav-link-animated me-2">
+              <Nav.Link as={Link} to="/orders" className="me-2">
                 <i className="bi bi-bag-check me-2"></i>
                 Orders
               </Nav.Link>
               <div className="nav-divider"></div>
-              <Nav.Link as={Link} to="/metrics" className="nav-link-animated me-2">
+              <Nav.Link as={Link} to="/metrics" className="me-2">
                 <i className="bi bi-graph-up me-2"></i>
                 Metrics
               </Nav.Link>
@@ -51,7 +51,7 @@ const Layout = ({ children }) => {
                 <Dropdown.Toggle variant="dark">
                   {user?.email}
                 </Dropdown.Toggle>
-                <Dropdown.Menu>
+                <Dropdown.Menu className="fade">
                   <Dropdown.Item as={Link} to="/profile">Profile</Dropdown.Item>
                   <Dropdown.Item as={Link} to="/settings">Settings</Dropdown.Item>
                   <Dropdown.Divider />

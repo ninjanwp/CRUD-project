@@ -1,30 +1,69 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:8000/api';
+// Mock credentials for development
+const MOCK_CREDENTIALS = {
+  email: 'admin@example.com',
+  password: 'admin123'
+};
+
+// Mock user data
+const MOCK_USER = {
+  id: 1,
+  email: 'admin@example.com',
+  name: 'Admin User',
+  role: 'admin'
+};
 
 const api = {
+  login: async (credentials) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Check credentials
+    if (credentials.identifier === MOCK_CREDENTIALS.email && 
+        credentials.password === MOCK_CREDENTIALS.password) {
+      return {
+        token: 'mock-jwt-token',
+        user: MOCK_USER
+      };
+    }
+    throw new Error('Invalid credentials');
+  },
+  
   getProducts: async () => {
-    return axios.get(`${BASE_URL}/products`);
+    const response = await axios.get('/api/products');
+    return response.data;
   },
-
+  
   createProduct: async (product) => {
-    return axios.post(`${BASE_URL}/products`, product);
+    const response = await axios.post('/api/products', product);
+    return response.data;
   },
-
+  
   updateProduct: async (id, product) => {
-    return axios.put(`${BASE_URL}/products/${id}`, product);
+    const response = await axios.put(`/api/products/${id}`, product);
+    return response.data;
   },
-
+  
+  deleteProduct: async (id) => {
+    const response = await axios.delete(`/api/products/${id}`);
+    return response.data;
+  },
+  
   deleteProducts: async (ids) => {
-    return axios.delete(`${BASE_URL}/products`, { data: { ids } });
-  },
-
-  getOrders: async () => {
-    return axios.get(`${BASE_URL}/orders`);
-  },
-
-  createOrder: async (order) => {
-    return axios.post(`${BASE_URL}/orders`, order);
+    const response = await fetch('/api/products', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids }),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to delete products');
+    }
+    
+    return response.json();
   }
 };
 

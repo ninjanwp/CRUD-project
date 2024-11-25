@@ -17,10 +17,15 @@ const useTableData = (endpoint, defaultItemsPerPage = 10) => {
       const method = `get${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}`;
       const response = await api[method]();
       console.log('API Response:', response); // Debug log
-      setData(response.data);
-      setFilteredData(response.data);
+      
+      // Handle the response data directly (no .data property needed)
+      const responseData = Array.isArray(response) ? response : [];
+      setData(responseData);
+      setFilteredData(responseData);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setData([]);
+      setFilteredData([]);
     } finally {
       setIsLoading(false);
     }
