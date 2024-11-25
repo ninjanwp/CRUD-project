@@ -1,27 +1,13 @@
-.modal-header .btn-close {
-  position: absolute !important;
-  right: 16px !important;
-  top: 16px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
 .modal-header {
   position: relative;
 }
 
-.modal-icon {
-  font-size: 1.2rem;
-
-}
-
-.modal-action-icon {
-  margin-right: 0.5rem;
-}
-
-.form-label i {
-  color: #6366f1;
-  font-size: 1rem;
+.modal-header .btn-close {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  padding: 0;
+  margin: 0;
 }
 
 .modal-title {
@@ -30,65 +16,21 @@
 }
 
 .modal-title i {
-  margin-right: 0.75rem;
-  font-size: 1.2rem;
   color: #6366f1;
+  font-size: 1.2rem;
 }
 
-/* Delete confirmation modal styles */
-.modal-header .bi-exclamation-triangle-fill {
-  color: #dc3545;
-  margin-bottom: 1rem;
+.form-label {
+  display: flex;
+  align-items: center;
 }
 
-.modal-body h4 {
-  color: #1a1a1a;
-  font-weight: 600;
+.form-label i {
+  color: #6366f1;
+  font-size: 1rem;
 }
 
-.modal-footer .btn {
-  min-width: 120px;
-}
-
-/* Consistent button hover states */
-.btn-danger:hover {
-  background-color: #bb2d3b;
-  border-color: #b02a37;
-}
-
-.btn-outline-secondary:hover {
-  background-color: #6c757d;
-  border-color: #6c757d;
-  color: white;
-}
-
-/* Delete button hover effect */
-.delete-btn {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0.5rem 1rem !important;
-}
-
-.delete-btn i {
-  font-size: 1rem !important;
-}
-
-.action-buttons {
-  display: flex !important;
-  gap: 1rem !important;
-  margin-left: auto !important;
-}
-
-.action-buttons button {
-  margin: 0 !important;
-}
-
-.modal-footer-with-delete {
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  padding: 1rem !important;
-  border-top: 1px solid #dee2e6 !important;
+.btn i {
+  font-size: 1rem;
 }
  

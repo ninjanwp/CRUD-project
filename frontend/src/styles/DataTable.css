@@ -8,8 +8,27 @@
 
 .pagination-controls {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.pagination-controls .items-per-page {
+  width: 100px;
+}
+
+.pagination-controls .pagination-buttons {
+  display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.pagination-controls .pagination-buttons button {
+  min-width: 80px;
+}
+
+.pagination-controls .pagination-info {
+  margin: 0 1rem;
 }
 
 .table th {
@@ -258,9 +277,30 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  background-color: #f8f9fa;
+  padding: 1rem 1.5rem;
   border-top: 1px solid #dee2e6;
+}
+
+.items-per-page-select {
+  width: 80px;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.page-info {
+  margin: 0 1rem;
+  white-space: nowrap;
+  color: #6b7280;
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 /* Fix button spacing */
@@ -368,4 +408,41 @@
   display: flex;
   gap: 1rem;
   align-items: center;
+}
+
+.entries-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6c757d;
+}
+
+.entries-select .form-select {
+  width: 80px;
+  margin: 0 0.5rem;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+}
+
+.entries-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6c757d;
+}
+
+.entries-select .form-select {
+  width: 80px;
+  margin: 0 0.5rem;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 } 

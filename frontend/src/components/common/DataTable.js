@@ -61,10 +61,16 @@ const DataTable = ({
     }
   };
 
+  const handleDeleteConfirmation = () => {
+    setShowDeleteConfirm(true);
+  };
+
   return (
     <Card>
-      <Card.Header className="d-flex justify-content-between align-items-center">
-        <div className="d-flex align-items-center">{title}</div>
+      <Card.Header className="d-flex justify-content-between align-items-center py-3">
+        <div className="d-flex align-items-center">
+          <h2 className="mb-0">{title}</h2>
+        </div>
         <div className="d-flex gap-3 align-items-center">
           <Form.Control
             type="search"
@@ -92,7 +98,17 @@ const DataTable = ({
               ))}
             </Form.Select>
           )}
-          {actionButton}
+          {actionButton && (
+            <div className="d-flex gap-2">
+              {selectedProducts.length > 0 && (
+                <Button variant="danger" onClick={handleDeleteConfirmation}>
+                  <i className="bi bi-trash me-2"></i>
+                  Delete Selected
+                </Button>
+              )}
+              {actionButton}
+            </div>
+          )}
         </div>
       </Card.Header>
       <Card.Body>
@@ -119,7 +135,7 @@ const DataTable = ({
                   {columns.map((column, colIndex) => (
                     <td key={colIndex} className={column.className}>
                       {column.format
-                        ? column.format(item[column.field])
+                        ? column.format(item[column.field], item)
                         : item[column.field]}
                     </td>
                   ))}
@@ -130,37 +146,42 @@ const DataTable = ({
         </div>
         
         {/* Add Pagination Controls */}
-        <div className="pagination-controls mt-3">
-          <Form.Select 
-            value={itemsPerPage}
-            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-            style={{ width: '100px' }}
-          >
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-          </Form.Select>
-          
-          <Button
-            variant="outline-secondary"
-            disabled={currentPage === 1}
-            onClick={() => onPageChange(currentPage - 1)}
-          >
-            Previous
-          </Button>
-          
-          <span>
-            Page {currentPage} of {totalPages || 1}
-          </span>
-          
-          <Button
-            variant="outline-secondary"
-            disabled={currentPage === totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-          >
-            Next
-          </Button>
+        <div className="d-flex justify-content-between align-items-center p-3">
+          <div className="d-flex align-items-center gap-2">
+            Show 
+            <Form.Select 
+              className="w-auto"
+              value={itemsPerPage}
+              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+              style={{ width: '80px' }}
+            >
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </Form.Select>
+            entries
+          </div>
+
+          <div className="d-flex align-items-center gap-3">
+            <Button
+              variant="outline-secondary"
+              disabled={currentPage === 1}
+              onClick={() => onPageChange(currentPage - 1)}
+            >
+              Previous
+            </Button>
+            <span>
+              Page {currentPage} of {totalPages || 1}
+            </span>
+            <Button
+              variant="outline-secondary"
+              disabled={currentPage === totalPages}
+              onClick={() => onPageChange(currentPage + 1)}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </Card.Body>
 

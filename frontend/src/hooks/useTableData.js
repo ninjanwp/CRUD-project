@@ -50,18 +50,20 @@ const useTableData = (endpoint, defaultItemsPerPage = 10) => {
     setSortDirection(direction);
     
     const sortedData = [...filteredData].sort((a, b) => {
-      const aValue = a[field];
-      const bValue = b[field];
+      let aValue = a[field];
+      let bValue = b[field];
       
-      if (typeof aValue === 'string') {
-        return direction === 'asc' 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+      // Convert to numbers for numeric fields
+      if (field === 'price' || field === 'stock' || field === 'total') {
+        aValue = Number(aValue);
+        bValue = Number(bValue);
       }
       
-      return direction === 'asc'
-        ? aValue - bValue
-        : bValue - aValue;
+      if (direction === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
     });
     
     setFilteredData(sortedData);

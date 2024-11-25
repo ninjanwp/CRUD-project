@@ -106,6 +106,26 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
+// Add this new endpoint for bulk delete
+app.delete('/api/products', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ message: 'Invalid request: ids array required' });
+    }
+
+    const [result] = await db.query(
+      'DELETE FROM products WHERE id IN (?)',
+      [ids]
+    );
+
+    res.json({ message: `${result.affectedRows} products deleted successfully` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Import routes
 const ordersRouter = require('./routes/orders');
 
