@@ -66,7 +66,7 @@ const DataTable = ({
   };
 
   return (
-    <Card>
+    <Card className="mb-3">
       <Card.Body>
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h4 className="mb-0">{title}</h4>
@@ -145,7 +145,7 @@ const DataTable = ({
         <div className="d-flex justify-content-between align-items-center">
           <div className="d-flex align-items-center">
             <Form.Select
-              className="w-auto me-2"
+              className="w-auto me-2 mb-3"
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
             >
@@ -155,13 +155,40 @@ const DataTable = ({
                 </option>
               ))}
             </Form.Select>
-            <span className="text-muted">
-              entries
-            </span>
+            <span className="text-muted mb-3">entries</span>
           </div>
+
           <Pagination>
-            {/* ... pagination code ... */}
+            <Pagination.First 
+              onClick={() => onPageChange(1)}
+              disabled={currentPage === 1}
+            />
+            <Pagination.Prev
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            />
+            
+            {[...Array(totalPages)].map((_, index) => (
+              <Pagination.Item
+                key={index + 1}
+                active={currentPage === index + 1}
+                onClick={() => onPageChange(index + 1)}
+              >
+                {index + 1}
+              </Pagination.Item>
+            ))}
+            
+            <Pagination.Next
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            />
+            <Pagination.Last
+              onClick={() => onPageChange(totalPages)}
+              disabled={currentPage === totalPages}
+            />
           </Pagination>
+
+          <div style={{ width: '150px' }}></div>
         </div>
       </Card.Body>
     </Card>

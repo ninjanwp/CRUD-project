@@ -121,7 +121,7 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
             <Col md={6}>
               <Form.Group className="mb-3">
                 <Form.Label>
-                  <i className="bi bi-box me-2"></i>
+                  <i className="bi bi-clipboard-data me-2"></i>
                   Stock
                 </Form.Label>
                 <Form.Control
