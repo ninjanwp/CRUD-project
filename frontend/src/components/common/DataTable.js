@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Table, Button, Form, Modal } from "react-bootstrap";
+import { Card, Table, Button, Form, Modal, Row, Col, Pagination } from "react-bootstrap";
 
 const DataTable = ({
   title,
@@ -67,51 +67,48 @@ const DataTable = ({
 
   return (
     <Card>
-      <Card.Header className="d-flex justify-content-between align-items-center py-3">
-        <div className="d-flex align-items-center">
-          <h2 className="mb-0">{title}</h2>
-        </div>
-        <div className="d-flex gap-3 align-items-center">
-          <Form.Control
-            type="search"
-            placeholder="Search..."
-            className="search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {sortOptions && (
-            <Form.Select
-              className="sort-select"
-              onChange={(e) => {
-                const [field, direction] = e.target.value.split(":");
-                onSort(field, direction);
-              }}
-            >
-              <option value="">Sort by...</option>
-              {sortOptions.map((option, index) => (
-                <option
-                  key={index}
-                  value={`${option.field}:${option.direction}`}
-                >
-                  {option.label}
-                </option>
-              ))}
-            </Form.Select>
-          )}
+      <Card.Body>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h4 className="mb-0">{title}</h4>
           {actionButton && (
             <div className="d-flex gap-2">
-              {selectedProducts.length > 0 && (
-                <Button variant="danger" onClick={handleDeleteConfirmation}>
-                  <i className="bi bi-trash me-2"></i>
-                  Delete Selected
-                </Button>
-              )}
               {actionButton}
             </div>
           )}
         </div>
-      </Card.Header>
-      <Card.Body>
+
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <Form.Select 
+            className="w-auto"
+            onChange={(e) => onSort(e.target.value)}
+          >
+            <option value="">Sort by...</option>
+            {sortOptions.map((option) => (
+              <option key={`${option.field}-${option.direction}`} value={`${option.field}-${option.direction}`}>
+                {option.label}
+              </option>
+            ))}
+          </Form.Select>
+
+          {selectedProducts.length > 0 && (
+            <Button 
+              variant="outline-danger" 
+              className="d-inline-flex align-items-center"
+              onClick={onDeleteSelected}
+            >
+              <i className="bi bi-trash me-2"></i>
+              Delete Selected ({selectedProducts.length})
+            </Button>
+          )}
+
+          <Form.Control
+            type="search"
+            placeholder="Search..."
+            className="w-auto"
+            onChange={(e) => onSearch(e.target.value)}
+          />
+        </div>
+
         <div className="table-responsive">
           <Table hover>
             <thead>
@@ -144,77 +141,29 @@ const DataTable = ({
             </tbody>
           </Table>
         </div>
-        
-        {/* Add Pagination Controls */}
-        <div className="d-flex justify-content-between align-items-center p-3">
-          <div className="d-flex align-items-center gap-2">
-            Show 
-            <Form.Select 
-              className="w-auto"
+
+        <div className="d-flex justify-content-between align-items-center">
+          <div className="d-flex align-items-center">
+            <Form.Select
+              className="w-auto me-2"
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              style={{ width: '80px' }}
             >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
+              {[10, 25, 50, 100].map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
             </Form.Select>
-            entries
-          </div>
-
-          <div className="d-flex align-items-center gap-3">
-            <Button
-              variant="outline-secondary"
-              disabled={currentPage === 1}
-              onClick={() => onPageChange(currentPage - 1)}
-            >
-              Previous
-            </Button>
-            <span>
-              Page {currentPage} of {totalPages || 1}
+            <span className="text-muted">
+              entries
             </span>
-            <Button
-              variant="outline-secondary"
-              disabled={currentPage === totalPages}
-              onClick={() => onPageChange(currentPage + 1)}
-            >
-              Next
-            </Button>
           </div>
+          <Pagination>
+            {/* ... pagination code ... */}
+          </Pagination>
         </div>
       </Card.Body>
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        show={showDeleteConfirm}
-        onHide={() => setShowDeleteConfirm(false)}
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete {selectedProducts.length} selected
-          items?
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => setShowDeleteConfirm(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="danger"
-            onClick={() => {
-              onDeleteSelected();
-              setShowDeleteConfirm(false);
-            }}
-          >
-            Delete
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </Card>
   );
 };

@@ -64,7 +64,8 @@ const ProductsPage = () => {
     },
     {
       field: "actions",
-      label: "Actions",
+      label: "",
+      className: "text-center",
       format: (_, item) => (
         <Button
           variant="outline-primary"
@@ -159,7 +160,7 @@ const ProductsPage = () => {
           </>
         }
         actionButton={
-          <Button variant="primary" onClick={handleAdd}>
+          <Button variant="outline-primary" className="d-inline-flex align-items-center" onClick={handleAdd}>
             <i className="bi bi-plus-lg me-2"></i>
             Add Product
           </Button>

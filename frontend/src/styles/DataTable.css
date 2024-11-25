@@ -141,6 +141,24 @@
   pointer-events: auto !important;
   position: relative;
   z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.btn-edit i {
+  font-size: 1rem;
+  color: #6366f1;
 }
 
 .table th:last-child,
@@ -445,4 +463,32 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.btn {
+  white-space: nowrap;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+}
+
+.table-responsive {
+  flex: 1;
+}
+
+/* Ensure consistent button styling */
+.btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 } 
