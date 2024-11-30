@@ -432,3 +432,11 @@ i.text-muted {
 .selected-items-list::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+.table tr {
+    border-left: 3px solid transparent;
+}
+
+.table tr.selected {
+    border-left: 3px solid var(--bs-primary);
+}
