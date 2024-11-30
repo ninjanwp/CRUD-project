@@ -15,11 +15,20 @@ export const AuthProvider = ({ children }) => {
       const response = await api.login(credentials);
       const { token, user } = response;
       
+      // User object now includes role and cart
+      const enrichedUser = {
+        ...user,
+        role: user.role || 'customer',
+        cart: user.cart || []
+      };
+      
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(enrichedUser));
       
       setToken(token);
-      setUser(user);
+      setUser(enrichedUser);
+      
+      return enrichedUser;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Login failed');
     } finally {
@@ -34,8 +43,18 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const isAdmin = () => user?.role === 'admin';
+  
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, loading }}>
+    <AuthContext.Provider value={{ 
+      token, 
+      user, 
+      login, 
+      logout, 
+      loading,
+      isAdmin,
+      updateCart: (cart) => setUser(prev => ({...prev, cart}))
+    }}>
       {children}
     </AuthContext.Provider>
   );

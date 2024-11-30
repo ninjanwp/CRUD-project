@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Form, Button, Container, Card, Alert } from 'react-bootstrap';
+import { Form, Button, Container, Card, Alert, Row, Col } from 'react-bootstrap';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [credentials, setCredentials] = useState({
     identifier: '',
     password: '',
@@ -20,7 +20,7 @@ const LoginPage = () => {
 
     try {
       await login(credentials);
-      navigate('/dashboard');
+      navigate('/admin/dashboard');
     } catch (error) {
       setError(error.message);
     } finally {
@@ -28,35 +28,46 @@ const LoginPage = () => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCredentials(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleDemoLogin = async (type) => {
+    const demoCredentials = {
+      admin: {
+        identifier: 'admin@example.com',
+        password: 'admin123'
+      },
+      customer: {
+        identifier: 'user@example.com',
+        password: 'user123'
+      }
+    };
+
+    setCredentials(demoCredentials[type]);
+    try {
+      await login(demoCredentials[type]);
+      if (type === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
+    } catch (error) {
+      setError(error.message);
+    }
   };
 
   return (
     <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
       <div style={{ maxWidth: '400px', width: '100%' }}>
-        <div className="text-center mb-4">
-          <h1 className="display-6 fw-bold" style={{ color: '#4f46e5' }}>Store Management</h1>
-          <p className="text-muted">Admin Dashboard</p>
-        </div>
-
         <Card>
           <Card.Body>
             <h2 className="text-center mb-4">Login</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
-                <Form.Label>Username or Email</Form.Label>
+                <Form.Label>Email</Form.Label>
                 <Form.Control
-                  type="text"
+                  type="email"
                   name="identifier"
                   value={credentials.identifier}
-                  onChange={handleChange}
-                  placeholder="Enter username or email"
+                  onChange={(e) => setCredentials(prev => ({...prev, identifier: e.target.value}))}
                   required
                 />
               </Form.Group>
@@ -66,19 +77,43 @@ const LoginPage = () => {
                   type="password"
                   name="password"
                   value={credentials.password}
-                  onChange={handleChange}
-                  placeholder="Enter password"
+                  onChange={(e) => setCredentials(prev => ({...prev, password: e.target.value}))}
                   required
                 />
               </Form.Group>
               <Button
                 type="submit"
-                className="w-100"
+                className="w-100 mb-3"
                 disabled={loading}
               >
                 {loading ? 'Logging in...' : 'Login'}
               </Button>
             </Form>
+            <div className="text-center mt-4">
+              <p className="text-muted">Demo Accounts</p>
+              <Row className="g-2">
+                <Col>
+                  <Button 
+                    variant="outline-primary" 
+                    size="sm" 
+                    className="w-100"
+                    onClick={() => handleDemoLogin('admin')}
+                  >
+                    Try Admin
+                  </Button>
+                </Col>
+                <Col>
+                  <Button 
+                    variant="outline-success" 
+                    size="sm" 
+                    className="w-100"
+                    onClick={() => handleDemoLogin('customer')}
+                  >
+                    Try Customer
+                  </Button>
+                </Col>
+              </Row>
+            </div>
           </Card.Body>
         </Card>
       </div>

@@ -149,6 +149,34 @@ const printAllProducts = async () => {
   }
 };
 
+// Public routes for storefront
+app.get("/api/storefront/products", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT id, name, description, price, stock FROM products WHERE stock > 0"
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get single product details
+app.get("/api/storefront/products/:id", async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT id, name, description, price, stock FROM products WHERE id = ? AND stock > 0",
+      [req.params.id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Start server
 app.listen(PORT, async () => {
   console.log(`Server running on http://localhost:${PORT}`);

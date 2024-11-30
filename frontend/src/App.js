@@ -7,57 +7,44 @@ import OrdersPage from './pages/OrdersPage';
 import Home from './pages/Home';
 import Metrics from './pages/Metrics';
 import SettingsPage from './pages/SettingsPage';
+import StorefrontPage from './pages/StorefrontPage';
 import { SettingsProvider } from './context/SettingsContext';
+import { AppProvider } from './context/AppContext';
+import MainNav from './components/navigation/MainNav';
+import Layout from './components/Layout';
+import AdminIndicator from './components/AdminIndicator';
 
 function App() {
   return (
     <AuthProvider>
-      <SettingsProvider>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/products"
-            element={
-              <ProtectedRoute>
-                <ProductsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/orders"
-            element={
-              <ProtectedRoute>
-                <OrdersPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/metrics"
-            element={
-              <ProtectedRoute>
-                <Metrics />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </SettingsProvider>
+      <AppProvider>
+        <SettingsProvider>
+          <MainNav />
+          <Layout>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<StorefrontPage />} />
+              <Route path="/products" element={<StorefrontPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin/*" element={
+                <ProtectedRoute adminOnly={true}>
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+                    <Route path="dashboard" element={<Home />} />
+                    <Route path="products" element={<ProductsPage />} />
+                    <Route path="orders" element={<OrdersPage />} />
+                    <Route path="metrics" element={<Metrics />} />
+                    <Route path="settings" element={<SettingsPage />} />
+                  </Routes>
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </Layout>
+          <AdminIndicator />
+        </SettingsProvider>
+      </AppProvider>
     </AuthProvider>
   );
 }

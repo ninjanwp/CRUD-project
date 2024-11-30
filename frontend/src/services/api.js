@@ -1,17 +1,29 @@
 import axios from 'axios';
 
 // Mock credentials for development
-const MOCK_CREDENTIALS = {
-  email: 'admin@example.com',
-  password: 'admin123'
-};
-
-// Mock user data
-const MOCK_USER = {
-  id: 1,
-  email: 'admin@example.com',
-  name: 'Admin User',
-  role: 'admin'
+const MOCK_USERS = {
+  admin: {
+    email: 'admin@example.com',
+    password: 'admin123',
+    data: {
+      id: 1,
+      email: 'admin@example.com',
+      name: 'Admin User',
+      role: 'admin',
+      cart: []
+    }
+  },
+  customer: {
+    email: 'user@example.com',
+    password: 'user123',
+    data: {
+      id: 2,
+      email: 'user@example.com',
+      name: 'John Doe',
+      role: 'customer',
+      cart: []
+    }
+  }
 };
 
 const api = {
@@ -19,14 +31,27 @@ const api = {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Check credentials
-    if (credentials.identifier === MOCK_CREDENTIALS.email && 
-        credentials.password === MOCK_CREDENTIALS.password) {
+    // Check admin credentials
+    const adminUser = MOCK_USERS.admin;
+    const customerUser = MOCK_USERS.customer;
+
+    if (credentials.identifier === adminUser.email && 
+        credentials.password === adminUser.password) {
       return {
-        token: 'mock-jwt-token',
-        user: MOCK_USER
+        token: 'mock-admin-jwt-token',
+        user: adminUser.data
       };
     }
+
+    // Check customer credentials
+    if (credentials.identifier === customerUser.email && 
+        credentials.password === customerUser.password) {
+      return {
+        token: 'mock-customer-jwt-token',
+        user: customerUser.data
+      };
+    }
+
     throw new Error('Invalid credentials');
   },
   

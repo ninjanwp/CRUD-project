@@ -10,21 +10,21 @@ const Home = () => {
       title: 'Product Management',
       icon: 'bi-box-seam',
       description: 'Add, edit, and manage your product inventory with ease.',
-      path: '/products',
+      path: '/admin/products',
       color: 'primary'
     },
     {
       title: 'Order Management',
       icon: 'bi-bag-check',
       description: 'Track and manage customer orders efficiently.',
-      path: '/orders',
+      path: '/admin/orders',
       color: 'success'
     },
     {
       title: 'Metrics',
       icon: 'bi-graph-up',
       description: 'View key metrics and analytics about your store.',
-      path: '/metrics',
+      path: '/admin/metrics',
       color: 'info'
     }
     // Add more modules here as needed
