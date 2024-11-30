@@ -42,15 +42,16 @@
 .table td {
   border-bottom: 1px solid var(--bs-border-color);
   color: var(--bs-body-color);
+  background: transparent !important;
 }
 
 .table tr:hover {
-  background-color: var(--bs-table-hover-bg);
+  background-color: var(--table-hover-bg);
 }
 
 /* Add styles for selected rows */
-.table tr.selected {
-  background-color: var(--color-canvas-subtle);
+.table tr.selected, .table tr:hover.selected {
+  background-color: var(--table-selected-bg);
 }
 
 /* Add styles for table header and footer */
