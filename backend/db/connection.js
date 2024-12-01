@@ -1,28 +1,28 @@
-const mysql = require("mysql2");
+const mysql = require('mysql2/promise');
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASS || "",
-  database: process.env.DB_NAME || "store",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0,
+  queueLimit: 0
 });
 
-// Add connection error handling
-pool.on('error', (err) => {
-  console.error('Database connection error:', err);
-});
-
-// Add connection health check
-const checkConnection = async () => {
+async function checkConnection() {
   try {
-    await pool.query('SELECT 1');
+    const connection = await pool.getConnection();
     console.log('Database connection successful');
-  } catch (err) {
-    console.error('Database connection failed:', err);
+    connection.release();
+    return true;
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    throw error;
   }
-};
+}
 
-module.exports = pool.promise();
+module.exports = {
+  pool,
+  checkConnection
+};

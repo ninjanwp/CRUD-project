@@ -13,38 +13,45 @@ import { AppProvider } from './context/AppContext';
 import MainNav from './components/navigation/MainNav';
 import Layout from './components/Layout';
 import AdminIndicator from './components/AdminIndicator';
+import { CartProvider } from './context/CartContext';
+import CartPage from './pages/CartPage';
+import RegisterPage from './pages/RegisterPage';
 
 function App() {
   return (
     <AuthProvider>
-      <AppProvider>
-        <SettingsProvider>
-          <MainNav />
-          <Layout>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<StorefrontPage />} />
-              <Route path="/products" element={<StorefrontPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              
-              {/* Admin Routes */}
-              <Route path="/admin/*" element={
-                <ProtectedRoute adminOnly={true}>
-                  <Routes>
-                    <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-                    <Route path="dashboard" element={<Home />} />
-                    <Route path="products" element={<ProductsPage />} />
-                    <Route path="orders" element={<OrdersPage />} />
-                    <Route path="metrics" element={<Metrics />} />
-                    <Route path="settings" element={<SettingsPage />} />
-                  </Routes>
-                </ProtectedRoute>
-              } />
-            </Routes>
-          </Layout>
-          <AdminIndicator />
-        </SettingsProvider>
-      </AppProvider>
+      <CartProvider>
+        <AppProvider>
+          <SettingsProvider>
+            <MainNav />
+            <Layout>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<StorefrontPage />} />
+                <Route path="/products" element={<StorefrontPage />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="dashboard" element={<Home />} />
+                {/* Admin Routes */}
+                <Route path="/admin/*" element={
+                  <ProtectedRoute adminOnly={true}>
+                    <Routes>
+                      <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+                      <Route path="dashboard" element={<Home />} />
+                      <Route path="products" element={<ProductsPage />} />
+                      <Route path="orders" element={<OrdersPage />} />
+                      <Route path="metrics" element={<Metrics />} />
+                      <Route path="settings" element={<SettingsPage />} />
+                    </Routes>
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </Layout>
+            <AdminIndicator />
+          </SettingsProvider>
+        </AppProvider>
+      </CartProvider>
     </AuthProvider>
   );
 }

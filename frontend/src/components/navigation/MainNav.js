@@ -1,16 +1,28 @@
 import { Navbar, Nav, Container, Button, Dropdown } from 'react-bootstrap';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useState, useEffect } from 'react';
 
 const MainNav = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [, forceUpdate] = useState({});
   const isAdminSection = location.pathname.startsWith('/admin');
+
+  useEffect(() => {
+    const handleAuthChange = () => forceUpdate({});
+    window.addEventListener('auth-change', handleAuthChange);
+    return () => window.removeEventListener('auth-change', handleAuthChange);
+  }, []);
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    if (location.pathname === '/') {
+      navigate(0);
+    } else {
+      navigate('/');
+    }
   };
 
   return (
@@ -44,10 +56,20 @@ const MainNav = () => {
               </>
             )}
           </Nav>
-          <Nav>
+          <Nav className="align-items-center">
+            {user && (
+              <Nav.Link as={Link} to="/cart" className="cart-link me-2">
+                <i className="bi bi-cart3 cart-icon"></i>
+                {user?.cart?.length > 0 && (
+                  <span className="badge rounded-pill bg-danger cart-badge">
+                    {user.cart.reduce((total, item) => total + item.quantity, 0)}
+                  </span>
+                )}
+              </Nav.Link>
+            )}
             {user ? (
               <Dropdown align="end">
-                <Dropdown.Toggle variant={isAdminSection ? "dark" : "light"}>
+                <Dropdown.Toggle variant={isAdminSection ? "dark" : "light"} className="d-flex align-items-center">
                   <i className="bi bi-person-circle me-2"></i>
                   {user.email}
                   {user.role === 'admin' && <span className="ms-1 badge bg-primary">Admin</span>}
@@ -68,12 +90,7 @@ const MainNav = () => {
                 </Dropdown.Menu>
               </Dropdown>
             ) : (
-              <Button 
-                as={Link} 
-                to="/login"
-                variant="outline-primary"
-                size="sm"
-              >
+              <Button as={Link} to="/login" variant="primary">
                 Login
               </Button>
             )}

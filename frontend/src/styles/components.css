@@ -23,7 +23,7 @@
 
 /* Card styles */
 .card {
-  background-color: var(--bs-card-bg);
+  background-color: var(--bs-body-bg);
   border-color: var(--bs-border-color);
   box-shadow: 0 1px 3px rgba(0,0,0,0.12);
 }
@@ -496,4 +496,70 @@ i.text-muted {
 
 .admin-indicator i {
   font-size: 1.1rem;
+}
+
+.list-group-item {
+  background-color: var(--bs-body-bg);
+  border-color: var(--bs-border-color);
+}
+
+[data-bs-theme="dark"] .text-muted {
+  color: var(--bs-gray-500) !important;
+}
+
+/* Add top padding to account for fixed navbar */
+.main-content {
+  padding-top: 72px; /* Navbar height (56px) + extra padding */
+}
+
+/* Cart icon and badge styling */
+.cart-link {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.cart-icon {
+  font-size: 1.4rem;
+}
+
+.cart-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(25%, -25%);
+  font-size: 0.7rem;
+  padding: 0.25rem 0.4rem;
+}
+
+/* Navbar alignment fixes */
+.navbar-nav .nav-item,
+.navbar-nav .dropdown {
+  display: flex;
+  align-items: center;
+}
+
+/* Storefront search styling */
+.storefront-search {
+  border-radius: 30px;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.storefront-search .input-group-text {
+  background: white;
+  border: none;
+  border-radius: 30px 0 0 30px;
+}
+
+.storefront-search .form-control {
+  border: none;
+  padding-left: 0;
+}
+
+.storefront-search .form-control:focus {
+  box-shadow: none;
 }

@@ -15,20 +15,14 @@ export const AuthProvider = ({ children }) => {
       const response = await api.login(credentials);
       const { token, user } = response;
       
-      // User object now includes role and cart
-      const enrichedUser = {
-        ...user,
-        role: user.role || 'customer',
-        cart: user.cart || []
-      };
-      
+      api.setAuthHeader(token);
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(enrichedUser));
+      localStorage.setItem('user', JSON.stringify(user));
       
       setToken(token);
-      setUser(enrichedUser);
+      setUser(user);
       
-      return enrichedUser;
+      return user;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Login failed');
     } finally {
@@ -41,10 +35,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
+    window.dispatchEvent(new Event('auth-change'));
   };
 
-  const isAdmin = () => user?.role === 'admin';
-  
   return (
     <AuthContext.Provider value={{ 
       token, 
@@ -52,7 +45,7 @@ export const AuthProvider = ({ children }) => {
       login, 
       logout, 
       loading,
-      isAdmin,
+      isAdmin: () => user?.role === 'admin',
       updateCart: (cart) => setUser(prev => ({...prev, cart}))
     }}>
       {children}

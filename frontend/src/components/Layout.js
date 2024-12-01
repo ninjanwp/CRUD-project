@@ -9,7 +9,9 @@ const Layout = ({ children }) => {
   return (
     <div className={`${darkMode ? 'dark-mode' : ''} min-vh-100`}>
       <div className={`content-wrapper ${isAdminSection ? 'admin-content' : 'store-content'}`}>
-        {children}
+        <div className="main-content">
+          {children}
+        </div>
       </div>
     </div>
   );

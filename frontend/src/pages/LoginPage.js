@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Form, Button, Container, Card, Alert, Row, Col } from 'react-bootstrap';
 
@@ -25,31 +25,6 @@ const LoginPage = () => {
       setError(error.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async (type) => {
-    const demoCredentials = {
-      admin: {
-        identifier: 'admin@example.com',
-        password: 'admin123'
-      },
-      customer: {
-        identifier: 'user@example.com',
-        password: 'user123'
-      }
-    };
-
-    setCredentials(demoCredentials[type]);
-    try {
-      await login(demoCredentials[type]);
-      if (type === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/');
-      }
-    } catch (error) {
-      setError(error.message);
     }
   };
 
@@ -89,30 +64,10 @@ const LoginPage = () => {
                 {loading ? 'Logging in...' : 'Login'}
               </Button>
             </Form>
-            <div className="text-center mt-4">
-              <p className="text-muted">Demo Accounts</p>
-              <Row className="g-2">
-                <Col>
-                  <Button 
-                    variant="outline-primary" 
-                    size="sm" 
-                    className="w-100"
-                    onClick={() => handleDemoLogin('admin')}
-                  >
-                    Try Admin
-                  </Button>
-                </Col>
-                <Col>
-                  <Button 
-                    variant="outline-success" 
-                    size="sm" 
-                    className="w-100"
-                    onClick={() => handleDemoLogin('customer')}
-                  >
-                    Try Customer
-                  </Button>
-                </Col>
-              </Row>
+            <div className="text-center mt-3">
+              <p className="mb-0">
+                Don't have an account? <Link to="/register">Register here</Link>
+              </p>
             </div>
           </Card.Body>
         </Card>

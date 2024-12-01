@@ -1,60 +1,31 @@
 import axios from 'axios';
 
-// Mock credentials for development
-const MOCK_USERS = {
-  admin: {
-    email: 'admin@example.com',
-    password: 'admin123',
-    data: {
-      id: 1,
-      email: 'admin@example.com',
-      name: 'Admin User',
-      role: 'admin',
-      cart: []
-    }
-  },
-  customer: {
-    email: 'user@example.com',
-    password: 'user123',
-    data: {
-      id: 2,
-      email: 'user@example.com',
-      name: 'John Doe',
-      role: 'customer',
-      cart: []
-    }
-  }
-};
+// Configure axios base URL
+axios.defaults.baseURL = 'http://localhost:8000';
 
 const api = {
   login: async (credentials) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Check admin credentials
-    const adminUser = MOCK_USERS.admin;
-    const customerUser = MOCK_USERS.customer;
-
-    if (credentials.identifier === adminUser.email && 
-        credentials.password === adminUser.password) {
-      return {
-        token: 'mock-admin-jwt-token',
-        user: adminUser.data
-      };
-    }
-
-    // Check customer credentials
-    if (credentials.identifier === customerUser.email && 
-        credentials.password === customerUser.password) {
-      return {
-        token: 'mock-customer-jwt-token',
-        user: customerUser.data
-      };
-    }
-
-    throw new Error('Invalid credentials');
+    const response = await axios.post('/auth/login', {
+      email: credentials.identifier || credentials.email,
+      password: credentials.password
+    });
+    return response.data;
   },
-  
+
+  register: async (userData) => {
+    const response = await axios.post('/auth/register', userData);
+    return response.data;
+  },
+
+  // Add auth header to all requests
+  setAuthHeader: (token) => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common['Authorization'];
+    }
+  },
+
   getProducts: async () => {
     const response = await axios.get('/api/products');
     return response.data;

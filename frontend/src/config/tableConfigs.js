@@ -16,25 +16,11 @@ export const sortOptionConfigs = {
 };
 
 export const columnConfigs = {
-  orders: [
-    { field: 'id', label: 'Order ID' },
-    { field: 'customer_name', label: 'Customer' },
-    { 
-      field: 'total', 
-      label: 'Total',
-      className: 'text-end',
-      format: 'currency'
-    },
-    { 
-      field: 'created_at', 
-      label: 'Date',
-      format: 'date'
-    }
-  ],
   products: [
     { field: 'id', label: 'ID' },
     { field: 'name', label: 'Name' },
     { field: 'description', label: 'Description' },
+    { field: 'categories', label: 'Categories' },
     {
       field: 'price',
       label: 'Price',
@@ -45,6 +31,27 @@ export const columnConfigs = {
       field: 'stock',
       label: 'Stock',
       className: 'text-end'
+    },
+    {
+      field: 'is_active',
+      label: 'Status',
+      format: (value) => value ? 'Active' : 'Inactive'
+    }
+  ],
+  orders: [
+    { field: 'id', label: 'Order ID' },
+    { field: 'user_email', label: 'Customer' },
+    { field: 'status', label: 'Status' },
+    { 
+      field: 'total_amount', 
+      label: 'Total',
+      className: 'text-end',
+      format: 'currency'
+    },
+    { 
+      field: 'created_at', 
+      label: 'Date',
+      format: 'date'
     }
   ]
 }; 

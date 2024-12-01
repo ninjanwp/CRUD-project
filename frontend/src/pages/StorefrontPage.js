@@ -30,19 +30,28 @@ const StorefrontPage = () => {
 
   return (
     <div className="bg-light min-vh-100">
-      <Container className="py-5 mt-4">
-        <Row className="mb-4">
-          <Col md={6} className="mx-auto">
-            <Form.Control
-              type="search"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="shadow-sm"
-            />
-          </Col>
-        </Row>
+      <div className="bg-primary text-white py-5 mb-4">
+        <Container>
+          <h1 className="display-4 text-center mb-4">Welcome to Our Store</h1>
+          <Row className="justify-content-center">
+            <Col md={6}>
+              <div className="input-group storefront-search">
+                <span className="input-group-text">
+                  <i className="bi bi-search"></i>
+                </span>
+                <Form.Control
+                  type="search"
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </Col>
+          </Row>
+        </Container>
+      </div>
 
+      <Container>
         {loading ? (
           <div className="text-center py-5">
             <div className="spinner-border text-primary" role="status">
