@@ -523,16 +523,21 @@ i.text-muted {
 }
 
 .cart-icon {
-  font-size: 1.4rem;
+  font-size: 1.8rem;
 }
 
 .cart-badge {
   position: absolute;
   top: 0;
   right: 0;
-  transform: translate(25%, -25%);
   font-size: 0.7rem;
-  padding: 0.25rem 0.4rem;
+  padding: 0.2rem;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Navbar alignment fixes */
@@ -562,4 +567,129 @@ i.text-muted {
 
 .storefront-search .form-control:focus {
   box-shadow: none;
+}
+
+.category-selector {
+  min-height: 100px;
+  background-color: var(--bs-light);
+  border-radius: var(--bs-border-radius);
+}
+
+.category-selector .btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.category-selector .btn:hover {
+  transform: translateY(-1px);
+}
+
+.category-btn.btn-outline-secondary:hover {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+  color: white;
+}
+
+.product-card {
+  transition: all 0.2s ease-in-out;
+  border: none;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+}
+
+.product-image-container {
+  height: 300px;
+  overflow: hidden;
+  position: relative;
+  background-color: var(--bs-gray-100);
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 1rem;
+  transition: transform 0.3s ease-in-out;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+.product-image-placeholder {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bs-gray-100);
+  font-size: 2rem;
+}
+
+[data-bs-theme="dark"] .product-image-container,
+[data-bs-theme="dark"] .product-image-placeholder {
+  background-color: var(--bs-gray-900);
+}
+
+.cart-preview {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 320px;
+  margin-top: 0.5rem;
+  z-index: 1050;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease-in-out;
+}
+
+.cart-link:hover .cart-preview {
+  opacity: 1;
+  visibility: visible;
+}
+
+.cart-preview::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 1rem;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid white;
+}
+
+.admin-badge {
+  position: relative;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.nav.align-items-center {
+  gap: 1rem;
+}
+
+.navbar .user-icon {
+  font-size: 1.5rem;
+}
+
+.navbar .cart-icon {
+  font-size: 1.8rem;
+}
+
+.navbar .cart-link {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }

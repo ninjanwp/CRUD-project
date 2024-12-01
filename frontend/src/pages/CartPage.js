@@ -1,8 +1,9 @@
 import React from 'react';
-import { Container, Card, ListGroup, Button, Row, Col } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { Container, Card, ListGroup, Button, Row, Col, Image } from 'react-bootstrap';
+import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { formatCurrency } from '../utils/formatters';
+import { Toaster, toast } from 'react-hot-toast';
 
 const CartPage = () => {
   const { cart, updateQuantity, removeFromCart, total } = useCart();
@@ -34,38 +35,68 @@ const CartPage = () => {
             <ListGroup variant="flush">
               {cart.map(item => (
                 <ListGroup.Item key={item.productId} className="py-3">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <div>
-                      <h5 className="mb-1">{item.name}</h5>
-                      <p className="text-muted mb-0">{formatCurrency(item.price)}</p>
-                    </div>
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="btn-group">
+                  <div className="d-flex gap-3">
+                    <Link to={`/products/${item.productId}`}>
+                      <Image 
+                        src={item.image} 
+                        alt={item.name}
+                        style={{ width: '120px', height: '120px', objectFit: 'contain' }}
+                      />
+                    </Link>
+                    <div className="flex-grow-1">
+                      <div className="d-flex justify-content-between mb-2">
+                        <div>
+                          <Link to={`/products/${item.productId}`} className="text-decoration-none">
+                            <h5 className="mb-1">{item.name}</h5>
+                          </Link>
+                          <p className="text-muted mb-2 small">{item.description}</p>
+                        </div>
+                        <div className="text-end">
+                          <div className="h5 mb-0">{formatCurrency(item.price * item.quantity)}</div>
+                          <small className="text-muted">
+                            {item.quantity} × {formatCurrency(item.price)}
+                          </small>
+                        </div>
+                      </div>
+                      <div className="d-flex justify-content-between align-items-end">
+                        <div className="btn-group">
+                          <Button 
+                            size="sm" 
+                            variant="outline-secondary"
+                            onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                          >
+                            -
+                          </Button>
+                          <Button variant="outline-secondary" disabled>
+                            {item.quantity}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline-secondary"
+                            onClick={() => {
+                              if (item.quantity >= item.stock) {
+                                return;
+                              }
+                              updateQuantity(item.productId, item.quantity + 1);
+                            }}
+                          >
+                            +
+                          </Button>
+                        </div>
                         <Button 
-                          size="sm" 
-                          variant="outline-secondary"
-                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                          size="sm"
+                          variant="outline-danger"
+                          className="d-flex align-items-center justify-content-center"
+                          onClick={() => removeFromCart(item.productId)}
+                          style={{ 
+                            width: '31px', 
+                            height: '31px',
+                            padding: 0
+                          }}
                         >
-                          -
-                        </Button>
-                        <Button variant="outline-secondary" disabled>
-                          {item.quantity}
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline-secondary"
-                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                        >
-                          +
+                          <i className="bi bi-trash"></i>
                         </Button>
                       </div>
-                      <Button 
-                        variant="link" 
-                        className="text-danger"
-                        onClick={() => removeFromCart(item.productId)}
-                      >
-                        <i className="bi bi-trash"></i>
-                      </Button>
                     </div>
                   </div>
                 </ListGroup.Item>
@@ -78,7 +109,7 @@ const CartPage = () => {
             <Card.Body>
               <h5 className="mb-3">Order Summary</h5>
               <div className="d-flex justify-content-between mb-3">
-                <span>Subtotal</span>
+                <span>Subtotal ({cart.reduce((acc, item) => acc + item.quantity, 0)} items)</span>
                 <span>{formatCurrency(total)}</span>
               </div>
               <Button variant="primary" className="w-100">

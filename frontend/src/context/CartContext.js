@@ -22,7 +22,10 @@ export const CartProvider = ({ children }) => {
         productId: product.id,
         name: product.name,
         price: product.price,
-        quantity: 1
+        quantity: 1,
+        stock: product.stock,
+        image: product.primary_image,
+        description: product.description
       }];
     }
     
@@ -36,6 +39,8 @@ export const CartProvider = ({ children }) => {
 
   const updateQuantity = (productId, quantity) => {
     if (quantity < 1) return;
+    const item = user?.cart.find(i => i.productId === productId);
+    if (item && quantity > item.stock) return;
     const newCart = user?.cart.map(item =>
       item.productId === productId ? { ...item, quantity } : item
     ) || [];

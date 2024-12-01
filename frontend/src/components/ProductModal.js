@@ -1,156 +1,194 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, Modal, Row, Col } from "react-bootstrap";
+import axios from "axios";
 
 const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState({
-    id: product?.id || '',
-    name: product?.name || '',
-    description: product?.description || '',
-    price: product?.price || '',
-    stock: product?.stock || ''
+    name: '',
+    description: '',
+    price: '',
+    stock: '',
+    categories: [],
+    images: [{
+      url: '',
+      alt_text: '',
+      is_primary: true,
+      display_order: 0
+    }]
   });
+
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    // Fetch categories when modal opens
+    if (show) {
+      const fetchCategories = async () => {
+        try {
+          const response = await axios.get('/api/categories');
+          setCategories(response.data);
+        } catch (error) {
+          console.error('Error fetching categories:', error);
+        }
+      };
+      fetchCategories();
+    }
+  }, [show]);
 
   useEffect(() => {
     if (product) {
       setFormData({
-        id: product.id || '',
-        name: product.name || '',
-        description: product.description || '',
-        price: product.price || '',
-        stock: product.stock || ''
+        ...product,
+        categories: product.categories ? product.categories.split(',').map(Number) : [],
+        images: product.images || [{
+          url: product.primary_image || '',
+          alt_text: product.name || '',
+          is_primary: true,
+          display_order: 0
+        }]
       });
     } else {
       setFormData({
-        id: '',
         name: '',
         description: '',
         price: '',
-        stock: ''
+        stock: '',
+        categories: [],
+        images: [{
+          url: '',
+          alt_text: '',
+          is_primary: true,
+          display_order: 0
+        }]
       });
     }
   }, [product]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    await onSubmit(formData);
+    onSubmit({
+      ...formData,
+      price: parseFloat(formData.price),
+      stock: parseInt(formData.stock),
+    });
   };
 
-  const isEditMode = !!product;
-
-  if (showDeleteConfirm) {
-    return (
-      <Modal show={true} onHide={() => setShowDeleteConfirm(false)} animation={true} className="fade">
-        <Modal.Header closeButton className="border-0 pb-0">
-        </Modal.Header>
-        <Modal.Body className="text-center pt-0">
-          <div className="display-1 text-danger mb-4">
-            <i className="bi bi-exclamation-triangle-fill"></i>
-          </div>
-          <h4 className="mb-4">Confirm Delete</h4>
-          <p>Are you sure you want to delete "{formData.name}"?</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <div className="w-100 d-flex justify-content-between">
-            <Button variant="danger" onClick={() => onDelete(product.id)}>
-              <i className="bi bi-trash me-2"></i>
-              Delete
-            </Button>
-            <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
-              Cancel
-            </Button>
-          </div>
-        </Modal.Footer>
-      </Modal>
-    );
-  }
-
   return (
-    <Modal show={show} onHide={onClose} animation={true} className="fade">
+    <Modal show={show} onHide={onClose} size="lg">
       <Modal.Header closeButton>
-        <Modal.Title>
-          <i className={`bi bi-${isEditMode ? 'pencil-square' : 'plus-lg'} me-2`}></i>
-          {isEditMode ? 'Edit Product' : 'Add Product'}
-        </Modal.Title>
+        <Modal.Title>{product ? 'Edit Product' : 'Add Product'}</Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
         <Modal.Body>
           <Form.Group className="mb-3">
-            <Form.Label>
-              <i className="bi bi-tag me-2"></i>
-              Name
-            </Form.Label>
+            <Form.Label>Name</Form.Label>
             <Form.Control
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
               required
             />
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>
-              <i className="bi bi-card-text me-2"></i>
-              Description
-            </Form.Label>
+            <Form.Label>Description</Form.Label>
             <Form.Control
               as="textarea"
-              rows={3}
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              required
             />
           </Form.Group>
 
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label>
-                  <i className="bi bi-currency-dollar me-2"></i>
-                  Price
-                </Form.Label>
+                <Form.Label>Price</Form.Label>
                 <Form.Control
                   type="number"
                   step="0.01"
                   value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  onChange={(e) => setFormData({...formData, price: e.target.value})}
                   required
                 />
               </Form.Group>
             </Col>
             <Col md={6}>
               <Form.Group className="mb-3">
-                <Form.Label>
-                  <i className="bi bi-clipboard-data me-2"></i>
-                  Stock
-                </Form.Label>
+                <Form.Label>Stock</Form.Label>
                 <Form.Control
                   type="number"
                   value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                  onChange={(e) => setFormData({...formData, stock: e.target.value})}
                   required
                 />
               </Form.Group>
             </Col>
           </Row>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Categories</Form.Label>
+            <div className="category-selector p-2 border rounded d-flex flex-wrap align-items-start">
+              {categories.map(category => (
+                <Button
+                  key={category.id}
+                  variant={formData.categories.includes(category.id) ? "primary" : "outline-secondary"}
+                  size="sm"
+                  className="me-2 mb-2 category-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setFormData({
+                      ...formData,
+                      categories: formData.categories.includes(category.id)
+                        ? formData.categories.filter(id => id !== category.id)
+                        : [...formData.categories, category.id]
+                    });
+                  }}
+                >
+                  {category.name}
+                  {formData.categories.includes(category.id) && (
+                    <i className="bi bi-check ms-2"></i>
+                  )}
+                </Button>
+              ))}
+            </div>
+            <Form.Text className="text-muted">
+              Click categories to select/deselect them
+            </Form.Text>
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Primary Image URL</Form.Label>
+            <Form.Control
+              type="url"
+              value={formData.images[0]?.url}
+              onChange={(e) => setFormData({
+                ...formData,
+                images: [{
+                  ...formData.images[0],
+                  url: e.target.value,
+                  alt_text: formData.name
+                }]
+              })}
+              required
+            />
+          </Form.Group>
         </Modal.Body>
-        <Modal.Footer className="d-flex justify-content-between">
-          <div>
-            {isEditMode && (
-              <Button variant="danger" onClick={() => setShowDeleteConfirm(true)}>
-                <i className="bi bi-trash me-2"></i>
-                Delete
-              </Button>
-            )}
-          </div>
-          <div className="d-flex gap-2">
-            <Button variant="secondary" onClick={onClose}>
-              Cancel
+        <Modal.Footer>
+          {product && (
+            <Button 
+              variant="danger" 
+              className="me-auto"
+              onClick={() => onDelete(product.id)}
+            >
+              Delete
             </Button>
-            <Button variant="primary" type="submit">
-              <i className="bi bi-check-lg me-2"></i>
-              {isEditMode ? 'Save Changes' : 'Add Product'}
-            </Button>
-          </div>
+          )}
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" type="submit">
+            {product ? 'Update' : 'Create'}
+          </Button>
         </Modal.Footer>
       </Form>
     </Modal>

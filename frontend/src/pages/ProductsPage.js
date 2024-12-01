@@ -41,6 +41,21 @@ const ProductsPage = () => {
       className: "text-end",
     },
     {
+      field: "category_names",
+      label: "Categories",
+    },
+    {
+      field: "primary_image",
+      label: "Image",
+      format: (value) => value ? (
+        <img 
+          src={value} 
+          alt="Product" 
+          style={{ height: '40px', width: '40px', objectFit: 'cover' }}
+        />
+      ) : null
+    },
+    {
       field: "actions",
       label: "",
       className: "text-center",

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Row, Col, Card } from 'react-bootstrap';
+import { Row, Col, Card, Image } from 'react-bootstrap';
 import useTableData from '../hooks/useTableData';
 import { formatCurrency } from '../utils/formatters';
 
@@ -103,9 +103,10 @@ const Metrics = () => {
           <Card>
             <Card.Body>
               <div className="table-responsive">
-                <table className="table table-hover">
+                <table className="table table-hover align-middle">
                   <thead>
                     <tr>
+                      <th>Image</th>
                       <th>Product Name</th>
                       <th>Current Stock</th>
                       <th>Price</th>
@@ -115,6 +116,13 @@ const Metrics = () => {
                   <tbody>
                     {lowStockItems.map(item => (
                       <tr key={item.id}>
+                        <td style={{ width: '80px' }}>
+                          <Image 
+                            src={item.image} 
+                            alt={item.name}
+                            style={{ width: '50px', height: '50px', objectFit: 'contain' }}
+                          />
+                        </td>
                         <td>{item.name}</td>
                         <td>{item.stock}</td>
                         <td>{formatCurrency(item.price)}</td>

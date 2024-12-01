@@ -14,6 +14,13 @@ const Home = () => {
       color: 'primary'
     },
     {
+      title: 'Category Management',
+      icon: 'bi-tags',
+      description: 'Manage product categories and organization.',
+      path: '/admin/categories',
+      color: 'warning'
+    },
+    {
       title: 'Order Management',
       icon: 'bi-bag-check',
       description: 'Track and manage customer orders efficiently.',

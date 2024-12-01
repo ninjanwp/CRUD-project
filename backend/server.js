@@ -128,8 +128,10 @@ app.get("/api/orders", async (req, res) => {
 app.get("/api/products", async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT p.*, 
-        GROUP_CONCAT(c.name) as categories,
+      SELECT 
+        p.*,
+        GROUP_CONCAT(DISTINCT c.name) as category_names,
+        GROUP_CONCAT(DISTINCT c.id) as categories,
         (SELECT url FROM product_images WHERE product_id = p.id AND is_primary = 1 LIMIT 1) as primary_image
       FROM products p
       LEFT JOIN product_categories pc ON p.id = pc.product_id
@@ -326,6 +328,62 @@ app.get("/api/test-auth", authMiddleware, async (req, res) => {
 // Add this near the top with your other routes
 app.get("/", (req, res) => {
   res.json({ message: "API is running" });
+});
+
+// Category management endpoints
+app.post("/api/categories", async (req, res) => {
+  try {
+    const { name, description, display_order } = req.body;
+    const slug = name.toLowerCase().replace(/\s+/g, "-");
+    const [result] = await pool.query(
+      "INSERT INTO categories (name, description, display_order, slug) VALUES (?, ?, ?, ?)",
+      [name, description, display_order, slug]
+    );
+    res.json({ id: result.insertId });
+  } catch (err) {
+    console.error('Error creating category:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put("/api/categories/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, display_order } = req.body;
+    const slug = name.toLowerCase().replace(/\s+/g, "-");
+    await pool.query(
+      "UPDATE categories SET name = ?, description = ?, display_order = ?, slug = ? WHERE id = ?",
+      [name, description, display_order, slug, id]
+    );
+    res.json({ message: "Category updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/products/:id", async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        p.*,
+        GROUP_CONCAT(DISTINCT c.name) as category_names,
+        GROUP_CONCAT(DISTINCT c.id) as categories,
+        (SELECT url FROM product_images WHERE product_id = p.id AND is_primary = 1 LIMIT 1) as primary_image
+      FROM products p
+      LEFT JOIN product_categories pc ON p.id = pc.product_id
+      LEFT JOIN categories c ON pc.category_id = c.id
+      WHERE p.id = ?
+      GROUP BY p.id
+    `, [req.params.id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Start server
