@@ -17,12 +17,18 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    console.log('Login attempt starting...');
 
     try {
-      await login(credentials);
-      navigate('/admin/dashboard');
+      await login({
+        email: credentials.identifier,
+        password: credentials.password
+      });
+      console.log('Login successful');
+      navigate('/admin');
     } catch (error) {
-      setError(error.message);
+      console.error('Login failed:', error);
+      setError(error.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }

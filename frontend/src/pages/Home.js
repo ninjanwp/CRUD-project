@@ -7,25 +7,25 @@ const Home = () => {
 
   const modules = [
     {
-      title: 'Product Management',
+      title: 'Inventory',
       icon: 'bi-box-seam',
-      description: 'Add, edit, and manage your product inventory with ease.',
-      path: '/admin/products',
+      description: 'Manage products, inventory, and product settings.',
+      path: '/admin/inventory',
       color: 'primary'
     },
     {
-      title: 'Category Management',
-      icon: 'bi-tags',
-      description: 'Manage product categories and organization.',
-      path: '/admin/categories',
-      color: 'warning'
-    },
-    {
-      title: 'Order Management',
+      title: 'Orders',
       icon: 'bi-bag-check',
       description: 'Track and manage customer orders efficiently.',
       path: '/admin/orders',
       color: 'success'
+    },
+    {
+      title: 'Users',
+      icon: 'bi-people',
+      description: 'Manage users and their permissions.',
+      path: '/admin/users',
+      color: 'danger'
     },
     {
       title: 'Metrics',
@@ -34,7 +34,6 @@ const Home = () => {
       path: '/admin/metrics',
       color: 'info'
     }
-    // Add more modules here as needed
   ];
 
   return (
@@ -56,7 +55,7 @@ const Home = () => {
                     <i className={`bi ${module.icon} display-4`}></i>
                   </div>
                   <Card.Title className="mt-3">{module.title}</Card.Title>
-                  <Card.Text className=" text-muted flex-grow-1">
+                  <Card.Text className="text-muted flex-grow-1">
                     {module.description}
                   </Card.Text>
                   <div className={`text-${module.color} mt-3`}>

@@ -455,7 +455,7 @@ i.text-muted {
 }
 
 .content-wrapper {
-  padding-top: 56px; /* Height of navbar */
+  padding-top: 1rem;
   min-height: calc(100vh - 56px);
   overflow-x: hidden;
 }
@@ -531,13 +531,7 @@ i.text-muted {
   top: 0;
   right: 0;
   font-size: 0.7rem;
-  padding: 0.2rem;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0.2rem 0.4rem;
 }
 
 /* Navbar alignment fixes */
@@ -570,9 +564,16 @@ i.text-muted {
 }
 
 .category-selector {
-  min-height: 100px;
-  background-color: var(--bs-light);
-  border-radius: var(--bs-border-radius);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.category-selector .form-check {
+  margin-bottom: 0.5rem;
+}
+
+.category-selector .form-check:last-child {
+  margin-bottom: 0;
 }
 
 .category-selector .btn {
@@ -671,6 +672,9 @@ i.text-muted {
   align-items: center;
   justify-content: center;
   vertical-align: middle;
+  background-color: #FFD700 !important;
+  color: #000 !important;
+  border: 1px solid #DAA520;
 }
 
 .nav.align-items-center {
@@ -692,4 +696,129 @@ i.text-muted {
   align-items: center;
   justify-content: center;
   position: relative;
+}
+
+.admin-role-badge {
+  background-color: #FFD700 !important;
+  color: #000 !important;
+  border: 1px solid #DAA520;
+}
+
+.admin-indicator {
+  background-color: #FFD700;
+  color: #000;
+  border: 1px solid #DAA520;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-indicator .bi-shield-lock-fill {
+  color: #DAA520;
+}
+
+/* Override Bootstrap badge colors for admin badges */
+.badge.admin-badge,
+.admin-badge.bg-primary,
+.admin-badge.bg-secondary,
+.admin-badge.bg-info {
+  background-color: #FFD700 !important;
+  color: #000 !important;
+  border: 1px solid #DAA520;
+}
+
+.modal-90w {
+  width: 90%;
+  max-width: 1200px;
+}
+
+.modal-body {
+  padding: 1rem;
+}
+
+.accordion {
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.nav-tabs {
+  margin-top: -1rem;
+}
+
+.tab-content {
+  padding: 1rem 0;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.page-content {
+  margin-top: -1rem;
+}
+
+.product-tabs {
+  border-bottom: none;
+  margin-bottom: 0;
+  gap: 0;
+}
+
+.product-tabs .nav-item .nav-link {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #dee2e6;
+  border-bottom: none;
+  border-radius: 0;
+  margin-right: 0;
+  background-color: #f8f9fa;
+  color: #6c757d;
+}
+
+.product-tabs .nav-item:first-child .nav-link {
+  border-radius: 0;
+}
+
+.product-tabs .nav-item:last-child .nav-link {
+  border-radius: 0;
+}
+
+.product-tabs .nav-link.active {
+  background-color: #fff;
+  color: #0d6efd;
+  border-color: #dee2e6;
+}
+
+.list-group-item.active {
+  background-color: rgba(13, 110, 253, 0.1) !important;
+  color: inherit !important;
+  border-color: rgba(13, 110, 253, 0.3) !important;
+}
+
+.list-group-item.active small {
+  color: #6c757d !important;
+}
+
+.list-group-item.active:hover {
+  background-color: rgba(13, 110, 253, 0.15) !important;
+}
+
+.form-switch .form-check-input {
+  width: 3em;
+  height: 1.5em;
+  margin-left: 0;
+}
+
+.form-switch .form-check-input:checked {
+  background-color: #198754;
+  border-color: #198754;
+}
+
+.form-switch .form-check-input:focus {
+  border-color: rgba(25, 135, 84, 0.25);
+  box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
 }

@@ -11,8 +11,8 @@ const StorefrontPage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('/api/products');
-        setProducts(response.data.filter(product => product.stock > 0));
+        const response = await axios.get('/api/storefront/products');
+        setProducts(response.data);
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import api from '../services/api';
 
 const useTableData = (endpoint, defaultItemsPerPage = 10) => {
@@ -14,14 +14,10 @@ const useTableData = (endpoint, defaultItemsPerPage = 10) => {
   const refreshData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const method = `get${endpoint.charAt(0).toUpperCase() + endpoint.slice(1)}`;
-      const response = await api[method]();
-      console.log('API Response:', response); // Debug log
-      
-      // Handle the response data directly (no .data property needed)
-      const responseData = Array.isArray(response) ? response : [];
-      setData(responseData);
-      setFilteredData(responseData);
+      const responseData = await api.list(endpoint);
+      const data = Array.isArray(responseData) ? responseData : responseData.data || [];
+      setData(data);
+      setFilteredData(data);
     } catch (error) {
       console.error('Error fetching data:', error);
       setData([]);

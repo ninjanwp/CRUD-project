@@ -10,7 +10,7 @@ import { formatCurrency } from "../utils/formatters";
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
 
-const InventoryPage = () => {
+const ProductsPage = () => {
   const [activeTab, setActiveTab] = useState('products');
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -131,18 +131,30 @@ const InventoryPage = () => {
   const ModalComponent = tabs[activeTab].modal;
 
   const handleSubmit = async (formData) => {
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
     try {
+      const endpoint = tabs[activeTab].endpoint;
+      let response;
+      
       if (editItem) {
-        await api.update(tabs[activeTab].endpoint, editItem.id, formData);
+        response = await api.update(endpoint, editItem.id, formData);
       } else {
-        await api.create(tabs[activeTab].endpoint, formData);
+        response = await api.create(endpoint, formData);
       }
-      setShowModal(false);
-      setEditItem(null);
-      refreshData();
+
+      if (response) {
+        toast.success(`${tabs[activeTab].title.slice(0, -1)} ${editItem ? 'updated' : 'created'} successfully`);
+        setShowModal(false);
+        setEditItem(null);
+        refreshData();
+      }
     } catch (error) {
       console.error('Failed to save:', error);
-      // TODO: Add error notification
+      toast.error(error.response?.data?.message || 'Failed to save. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -179,7 +191,7 @@ const InventoryPage = () => {
             className="d-inline-flex align-items-center"
           >
             <i className="bi bi-plus-lg me-2"></i>
-            Add {tabs[activeTab].title.slice(0, -1)}
+            Add {tabs[activeTab].singularTitle}
           </Button>
         }
         currentPage={currentPage}
@@ -203,10 +215,11 @@ const InventoryPage = () => {
           }}
           onSubmit={handleSubmit}
           item={editItem}
+          isSubmitting={isSubmitting}
         />
       )}
     </div>
   );
 };
 
-export default InventoryPage;
+export default ProductsPage;

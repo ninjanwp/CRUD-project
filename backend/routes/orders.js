@@ -11,10 +11,10 @@ router.get('/', async (req, res) => {
         COUNT(oi.id) as item_count, 
         SUM(oi.quantity) as total_items,
         d.code as discount_code
-      FROM orders o
-      LEFT JOIN users u ON o.user_id = u.id
-      LEFT JOIN order_items oi ON o.id = oi.order_id
-      LEFT JOIN discounts d ON o.discount_id = d.id
+      FROM \`order\` o
+      LEFT JOIN user u ON o.user_id = u.id
+      LEFT JOIN order_item oi ON o.id = oi.order_id
+      LEFT JOIN discount d ON o.discount_id = d.id
       GROUP BY o.id
       ORDER BY o.created_at DESC
     `);
@@ -28,14 +28,14 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const [order] = await db.query(
-      `SELECT * FROM orders WHERE id = ?`,
+      `SELECT * FROM \`order\` WHERE id = ?`,
       [req.params.id]
     );
     
     const [items] = await db.query(`
       SELECT oi.*, p.name, p.description
-      FROM order_items oi
-      JOIN products p ON oi.product_id = p.id
+      FROM order_item oi
+      JOIN product p ON oi.product_id = p.id
       WHERE oi.order_id = ?
     `, [req.params.id]);
     
@@ -55,21 +55,21 @@ router.post('/', async (req, res) => {
     const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
     const [orderResult] = await conn.query(
-      'INSERT INTO orders (customer_name, total) VALUES (?, ?)',
-      [customer_name, total]
+      'INSERT INTO `order` (user_id, status, subtotal, tax_amount, shipping_amount, discount_id, discount_amount, total_amount) VALUES (?, "pending", ?, ?, ?, ?, ?, ?)',
+      [userId, subtotal, taxAmount, shippingAmount, discountId, discountAmount, totalAmount]
     );
     
     const orderId = orderResult.insertId;
     
     for (const item of items) {
       await conn.query(
-        'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
+        'INSERT INTO order_item (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
         [orderId, item.product_id, item.quantity, item.price]
       );
       
       // Update product stock
       await conn.query(
-        'UPDATE products SET stock = stock - ? WHERE id = ?',
+        'UPDATE product SET stock = stock - ? WHERE id = ?',
         [item.quantity, item.product_id]
       );
     }

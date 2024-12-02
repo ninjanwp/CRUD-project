@@ -11,8 +11,8 @@ import { toast } from 'react-hot-toast';
 const ProductDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const { addToCart, cart } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,9 +33,9 @@ const ProductDetailsPage = () => {
   }, [id, navigate]);
 
   const handleAddToCart = () => {
-    const currentQuantity = user?.cart?.find(i => i.productId === product.id)?.quantity || 0;
+    const currentQuantity = cart.find(i => i.productId === product.id)?.quantity || 0;
     if (currentQuantity >= product.stock) {
-      return; // Simply return if trying to add more than stock
+      return;
     }
     addToCart(product);
   };
@@ -75,12 +75,29 @@ const ProductDetailsPage = () => {
           <div className="sticky-md-top" style={{ top: '2rem' }}>
             <h1 className="mb-3">{product.name}</h1>
             <div className="mb-4">
-              <h2 className="h3 text-primary mb-3">
+              <h2 className="h3 text-primary mb-2">
                 {formatCurrency(product.price)}
               </h2>
+              {product.compare_at_price && (
+                <p className="text-muted text-decoration-line-through mb-2">
+                  {formatCurrency(product.compare_at_price)}
+                </p>
+              )}
               <p className="text-muted mb-3">
                 Stock: {product.stock > 0 ? `${product.stock} units` : 'Out of stock'}
+                {product.low_stock_threshold && product.stock <= product.low_stock_threshold && (
+                  <Badge bg="warning" className="ms-2">Low Stock</Badge>
+                )}
               </p>
+              {product.sku && (
+                <p className="text-muted small mb-2">SKU: {product.sku}</p>
+              )}
+              {product.weight && (
+                <p className="text-muted small mb-2">Weight: {product.weight}g</p>
+              )}
+              {product.dimensions && (
+                <p className="text-muted small mb-2">Dimensions: {product.dimensions}</p>
+              )}
               {product.category_names && (
                 <div className="mb-3">
                   {product.category_names.split(',').map((category, index) => (

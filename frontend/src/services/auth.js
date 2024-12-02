@@ -1,12 +1,19 @@
 import axios from 'axios';
 
 const auth = {
-  login: async (email, password) => {
-    const response = await axios.post('/auth/login', { email, password });
-    const { token, user } = response.data;
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    return user;
+  login: async (credentials) => {
+    console.log('Attempting login with email:', credentials.email);
+    try {
+      const response = await axios.post('/auth/login', credentials);
+      console.log('Login response:', response.data);
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      return response.data;
+    } catch (error) {
+      console.error('Login error details:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   logout: () => {

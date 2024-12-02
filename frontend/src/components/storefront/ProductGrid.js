@@ -6,17 +6,11 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 
 const ProductGrid = ({ products }) => {
-  const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart, cart } = useCart();
   const navigate = useNavigate();
 
   const handleAddToCart = (product) => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    
-    const currentQuantity = user?.cart?.find(i => i.productId === product.id)?.quantity || 0;
+    const currentQuantity = cart.find(i => i.productId === product.id)?.quantity || 0;
     if (currentQuantity >= product.stock) {
       return;
     }

@@ -2,13 +2,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
-import ProductsPage from './pages/ProductsPage';
+import ProductsPage from './pages/InventoryPage';
 import OrdersPage from './pages/OrdersPage';
 import Home from './pages/Home';
 import Metrics from './pages/Metrics';
-import SettingsPage from './pages/SettingsPage';
 import StorefrontPage from './pages/StorefrontPage';
-import { SettingsProvider } from './context/SettingsContext';
 import { AppProvider } from './context/AppContext';
 import MainNav from './components/navigation/MainNav';
 import Layout from './components/Layout';
@@ -16,16 +14,46 @@ import AdminIndicator from './components/AdminIndicator';
 import { CartProvider } from './context/CartContext';
 import CartPage from './pages/CartPage';
 import RegisterPage from './pages/RegisterPage';
-import CategoriesPage from './pages/CategoriesPage';
 import ProductDetailsPage from './pages/ProductDetailsPage';
+import UsersPage from './pages/admin/UsersPage';
+import InventoryPage from './pages/InventoryPage';
+import InventoryDashboard from './pages/InventoryDashboard';
+import { SettingsProvider } from './context/SettingsContext';
+
+const routes = [
+  {
+    path: '/admin/inventory',
+    name: 'Inventory',
+    icon: 'bi-box-seam',
+    component: InventoryPage
+  },
+  {
+    path: '/admin/orders',
+    name: 'Orders',
+    icon: 'bi-bag-check',
+    component: OrdersPage
+  },
+  {
+    path: '/admin/users',
+    name: 'Users',
+    icon: 'bi-people',
+    component: UsersPage
+  },
+  {
+    path: '/admin/metrics',
+    name: 'Metrics',
+    icon: 'bi-graph-up',
+    component: Metrics
+  }
+];
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <CartProvider>
-          <AppProvider>
-            <SettingsProvider>
+        <SettingsProvider>
+          <CartProvider>
+            <AppProvider>
               <MainNav />
               <Layout>
                 <Routes>
@@ -40,22 +68,21 @@ function App() {
                   <Route path="/admin/*" element={
                     <ProtectedRoute adminOnly={true}>
                       <Routes>
-                        <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-                        <Route path="dashboard" element={<Home />} />
-                        <Route path="products" element={<ProductsPage />} />
+                        <Route path="/" element={<Home />} />
+                        <Route path="dashboard" element={<Navigate to="/admin" replace />} />
+                        <Route path="inventory" element={<InventoryPage />} />
                         <Route path="orders" element={<OrdersPage />} />
+                        <Route path="users" element={<UsersPage />} />
                         <Route path="metrics" element={<Metrics />} />
-                        <Route path="settings" element={<SettingsPage />} />
-                        <Route path="categories" element={<CategoriesPage />} />
                       </Routes>
                     </ProtectedRoute>
                   } />
                 </Routes>
               </Layout>
               <AdminIndicator />
-            </SettingsProvider>
-          </AppProvider>
-        </CartProvider>
+            </AppProvider>
+          </CartProvider>
+        </SettingsProvider>
       </AuthProvider>
     </BrowserRouter>
   );

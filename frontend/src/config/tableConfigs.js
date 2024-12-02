@@ -36,6 +36,11 @@ export const columnConfigs = {
       field: 'is_active',
       label: 'Status',
       format: (value) => value ? 'Active' : 'Inactive'
+    },
+    {
+      field: 'manufacturer_name',
+      label: 'Manufacturer',
+      className: 'text-center'
     }
   ],
   orders: [

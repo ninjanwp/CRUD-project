@@ -14,7 +14,7 @@ async function createAdminUser() {
   });
 
   await pool.query(
-    "INSERT INTO users (email, first_name, last_name, password_hash, role) VALUES (?, ?, ?, ?, ?)",
+    "INSERT INTO user (email, first_name, last_name, password_hash, role) VALUES (?, ?, ?, ?, ?)",
     ["admin@example.com", "Admin", "User", hashedPassword, "admin"]
   );
 

@@ -1,6 +1,6 @@
 // Context for managing auth state
 import React, { createContext, useContext, useState } from 'react';
-import api from '../services/api';
+import auth from '../services/auth';
 
 const AuthContext = createContext(null);
 
@@ -12,19 +12,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setLoading(true);
-      const response = await api.login(credentials);
-      const { token, user } = response;
+      const response = await auth.login(credentials);
       
-      api.setAuthHeader(token);
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      setToken(response.token);
+      setUser(response.user);
       
-      setToken(token);
-      setUser(user);
-      
-      return user;
+      return response.user;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Login failed');
+      console.error('Login error:', error);
+      throw error;
     } finally {
       setLoading(false);
     }

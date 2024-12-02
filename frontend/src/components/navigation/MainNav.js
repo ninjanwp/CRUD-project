@@ -3,9 +3,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useState, useEffect } from 'react';
 import CartPreview from '../cart/CartPreview';
+import { useCart } from '../../context/CartContext';
 
 const MainNav = () => {
   const { user, logout } = useAuth();
+  const { cart } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
   const [, forceUpdate] = useState({});
@@ -42,26 +44,24 @@ const MainNav = () => {
         <Navbar.Collapse>
           <Nav className="me-auto">
             {isAdminSection ? (
-              // Admin Navigation Items
               <>
-                <Nav.Link as={Link} to="/admin/dashboard">
+                <Nav.Link as={Link} to="/admin">
                   Dashboard
                 </Nav.Link>
-                <Nav.Link as={Link} to="/admin/categories">
-                  Categories
-                </Nav.Link>
-                <Nav.Link as={Link} to="/admin/products">
-                  Products
+                <Nav.Link as={Link} to="/admin/inventory">
+                  Inventory
                 </Nav.Link>
                 <Nav.Link as={Link} to="/admin/orders">
                   Orders
+                </Nav.Link>
+                <Nav.Link as={Link} to="/admin/users">
+                  Users
                 </Nav.Link>
                 <Nav.Link as={Link} to="/admin/metrics">
                   Metrics
                 </Nav.Link>
               </>
             ) : (
-              // Client Navigation Items
               <>
                 <Nav.Link as={Link} to="/products">
                   Products
@@ -73,22 +73,15 @@ const MainNav = () => {
             )}
           </Nav>
           <Nav className="align-items-center gap-3">
-            {user && (
-              <div className="cart-link">
-                <Link to="/cart" className="nav-link">
-                  <i className="bi bi-cart3 cart-icon"></i>
-                  {user?.cart?.length > 0 && (
-                    <span className="badge bg-primary cart-badge">
-                      {user.cart.reduce(
-                        (total, item) => total + item.quantity,
-                        0
-                      )}
-                    </span>
-                  )}
-                </Link>
-                <CartPreview />
-              </div>
-            )}
+            <Nav.Link as={Link} to="/cart" className="cart-link">
+              <i className="bi bi-cart3 cart-icon"></i>
+              {cart.length > 0 && (
+                <span className="badge rounded-pill bg-primary cart-badge">
+                  {cart.reduce((acc, item) => acc + item.quantity, 0)}
+                </span>
+              )}
+              <CartPreview />
+            </Nav.Link>
             {user ? (
               <Dropdown align="end">
                 <Dropdown.Toggle
@@ -110,21 +103,15 @@ const MainNav = () => {
                     <>
                       <Dropdown.Item
                         as={Link}
-                        to={isAdminSection ? "/" : "/admin/dashboard"}
+                        to={isAdminSection ? "/" : "/admin"}
                       >
                         {isAdminSection ? "View Store" : "Admin Dashboard"}
-                      </Dropdown.Item>
-                      <Dropdown.Item as={Link} to="/admin/settings">
-                        Settings
                       </Dropdown.Item>
                       <Dropdown.Divider />
                     </>
                   )}
                   <Dropdown.Item as={Link} to="/profile">
                     Profile
-                  </Dropdown.Item>
-                  <Dropdown.Item as={Link} to="/cart">
-                    Cart ({user.cart?.length || 0})
                   </Dropdown.Item>
                   <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
                 </Dropdown.Menu>
