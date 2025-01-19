@@ -27,16 +27,28 @@ const ProductGrid = ({ products }) => {
               to={`/products/${product.id}`}
               className="text-decoration-none flex-grow-1 d-flex flex-column"
             >
-              <Card.Img
-                variant="top"
-                src={product.images?.[0]?.url || "/placeholder.jpg"}
-                alt={product.images?.[0]?.alt_text || product.name}
-                style={{
-                  height: "200px",
-                  objectFit: "contain",
-                  padding: "1rem",
-                }}
-              />
+              {product.images?.length > 0 && product.images[0]?.url ? (
+                <Card.Img
+                  variant="top"
+                  src={`http://localhost:8000${product.images[0].url}`}
+                  alt={product.images[0]?.alt_text || product.name}
+                  style={{
+                    height: "200px",
+                    objectFit: "contain",
+                    padding: "1rem",
+                  }}
+                />
+              ) : (
+                <div
+                  className="d-flex align-items-center justify-content-center bg-light"
+                  style={{ height: "200px" }}
+                >
+                  <i
+                    className="bi bi-image text-muted"
+                    style={{ fontSize: "3rem" }}
+                  ></i>
+                </div>
+              )}
               <Card.Body className="d-flex flex-column">
                 <Card.Title className="text-dark">{product.name}</Card.Title>
                 <Card.Text className="text-muted flex-grow-1">

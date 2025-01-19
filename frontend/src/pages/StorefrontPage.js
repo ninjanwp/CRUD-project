@@ -32,7 +32,7 @@ const StorefrontPage = () => {
     <div className="bg-light min-vh-100">
       <div className="bg-primary text-white py-5 mb-4">
         <Container>
-          <h1 className="display-4 text-center mb-4">Welcome to Our Store</h1>
+          <h1 className="display-4 text-center mb-4">Welcome to Storefront</h1>
           <Row className="justify-content-center">
             <Col md={6}>
               <div className="input-group storefront-search">

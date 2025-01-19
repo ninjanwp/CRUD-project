@@ -1,45 +1,67 @@
-const pool = require('./connection');
+const pool = require("./connection");
 
 async function getActiveCart(userId) {
-  const [carts] = await pool.query(
-    'SELECT * FROM cart WHERE user_id = ? AND status = "active" LIMIT 1',
-    [userId]
-  );
-  
-  if (carts.length === 0) {
-    const [result] = await pool.query(
-      'INSERT INTO cart (user_id, status) VALUES (?, "active")',
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    console.log("Getting active cart for user:", userId);
+
+    const [carts] = await conn.query(
+      'SELECT * FROM cart WHERE user_id = ? AND status = "active" LIMIT 1',
       [userId]
     );
-    return { id: result.insertId, user_id: userId, status: 'active' };
+
+    if (carts.length === 0) {
+      console.log("No active cart found, creating new cart for user:", userId);
+      const [result] = await conn.query(
+        'INSERT INTO cart (user_id, status) VALUES (?, "active")',
+        [userId]
+      );
+      const newCart = {
+        id: result.insertId,
+        user_id: userId,
+        status: "active",
+      };
+      await conn.commit();
+      console.log("Created new cart:", newCart);
+      return newCart;
+    }
+
+    await conn.commit();
+    console.log("Found existing cart:", carts[0]);
+    return carts[0];
+  } catch (err) {
+    await conn.rollback();
+    console.error("Error in getActiveCart:", err);
+    throw err;
+  } finally {
+    conn.release();
   }
-  
-  return carts[0];
 }
 
 async function getCartItems(cartId) {
-  const [items] = await pool.query(`
+  console.log("Getting items for cart:", cartId);
+  const [items] = await pool.query(
+    `
     SELECT 
       ci.*,
       p.name,
       p.description,
-      COALESCE(pv.price, p.price) as price,
-      COALESCE(pv.stock, p.stock) as stock,
-      pv.id as variant_id,
-      (
-        SELECT JSON_OBJECTAGG(a.code, va.value)
-        FROM variant_attribute va
-        JOIN attribute a ON va.attribute_id = a.id
-        WHERE va.variant_id = pv.id
-      ) as variant_attributes,
-      (SELECT url FROM product_image WHERE product_id = p.id AND is_primary = 1 LIMIT 1) as image,
-      (ci.quantity * ci.price_at_time) as subtotal
+      p.price,
+      p.stock,
+      CASE 
+        WHEN (SELECT url FROM product_image WHERE product_id = p.id AND is_primary = 1 LIMIT 1) IS NOT NULL 
+        THEN CONCAT('http://localhost:8000', (SELECT url FROM product_image WHERE product_id = p.id AND is_primary = 1 LIMIT 1))
+        ELSE NULL
+      END as image
     FROM cart_item ci
     JOIN product p ON ci.product_id = p.id
-    LEFT JOIN product_variant pv ON ci.variant_id = pv.id
     WHERE ci.cart_id = ?
-  `, [cartId]);
-  
+    `,
+    [cartId]
+  );
+
+  console.log("Found cart items:", items);
   return items;
 }
 
@@ -47,9 +69,10 @@ async function addToCart(cartId, variantId, quantity) {
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
-    
+
     // Get variant with product info
-    const [variants] = await conn.query(`
+    const [variants] = await conn.query(
+      `
       SELECT 
         v.*,
         p.name as product_name,
@@ -57,44 +80,46 @@ async function addToCart(cartId, variantId, quantity) {
       FROM product_variant v
       JOIN product p ON v.product_id = p.id
       WHERE v.id = ? AND v.is_active = 1 AND p.is_active = 1
-    `, [variantId]);
+    `,
+      [variantId]
+    );
 
     if (variants.length === 0) {
-      throw new Error('Variant not found or inactive');
+      throw new Error("Variant not found or inactive");
     }
 
     const variant = variants[0];
-    
+
     // Check stock
     if (variant.stock < quantity) {
-      throw new Error('Not enough stock available');
+      throw new Error("Not enough stock available");
     }
 
     // Check for existing cart item
     const [existing] = await conn.query(
-      'SELECT id, quantity FROM cart_item WHERE cart_id = ? AND variant_id = ?',
+      "SELECT id, quantity FROM cart_item WHERE cart_id = ? AND variant_id = ?",
       [cartId, variantId]
     );
-    
+
     if (existing.length > 0) {
       // Update existing cart item
       const newQuantity = existing[0].quantity + quantity;
       if (variant.stock < newQuantity) {
-        throw new Error('Not enough stock available');
+        throw new Error("Not enough stock available");
       }
-      
+
       await conn.query(
-        'UPDATE cart_item SET quantity = ?, price_at_time = ? WHERE id = ?',
+        "UPDATE cart_item SET quantity = ?, price_at_time = ? WHERE id = ?",
         [newQuantity, variant.price, existing[0].id]
       );
     } else {
       // Insert new cart item
       await conn.query(
-        'INSERT INTO cart_item (cart_id, variant_id, quantity, price_at_time) VALUES (?, ?, ?, ?)',
+        "INSERT INTO cart_item (cart_id, variant_id, quantity, price_at_time) VALUES (?, ?, ?, ?)",
         [cartId, variantId, quantity, variant.price]
       );
     }
-    
+
     await conn.commit();
     return { success: true };
   } catch (err) {
@@ -109,7 +134,8 @@ async function getCart(cartId) {
   const conn = await pool.getConnection();
   try {
     // Get cart items with product and variant info
-    const [items] = await conn.query(`
+    const [items] = await conn.query(
+      `
       SELECT 
         ci.*,
         p.name as product_name,
@@ -129,15 +155,20 @@ async function getCart(cartId) {
       LEFT JOIN attribute_value av ON vav.value_id = av.id
       WHERE ci.cart_id = ?
       GROUP BY ci.id
-    `, [cartId]);
+    `,
+      [cartId]
+    );
 
     // Calculate totals
-    const subtotal = items.reduce((sum, item) => sum + (item.price_at_time * item.quantity), 0);
-    
+    const subtotal = items.reduce(
+      (sum, item) => sum + item.price_at_time * item.quantity,
+      0
+    );
+
     return {
       items,
       subtotal,
-      total: subtotal // Add tax/shipping calculation later
+      total: subtotal, // Add tax/shipping calculation later
     };
   } finally {
     conn.release();
@@ -148,5 +179,5 @@ module.exports = {
   getActiveCart,
   getCartItems,
   addToCart,
-  getCart
-}; 
+  getCart,
+};

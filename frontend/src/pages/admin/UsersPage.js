@@ -53,7 +53,11 @@ const UsersPage = () => {
       console.log("Submitting user data:", userData); // Debug log
 
       if (editUser) {
-        const updatedUser = await api.update("users", editUser.id, userData);
+        const updatedUser = await api.update(
+          "/api/admin/users",
+          editUser.id,
+          userData
+        );
         console.log("Update response:", updatedUser); // Debug log
 
         if (updatedUser) {
@@ -66,7 +70,7 @@ const UsersPage = () => {
           await refreshData(); // Refresh the list
         }
       } else {
-        const newUser = await api.create("users", userData);
+        const newUser = await api.create("/api/admin/users", userData);
         if (newUser) {
           setShowModal(false);
           setEditUser(null);

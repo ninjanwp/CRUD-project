@@ -209,6 +209,34 @@ app.post(
   }
 );
 
+// Add helper function for cleaning up unused images
+const cleanupUnusedImages = async (productId, newImages = []) => {
+  try {
+    // Get existing images for the product
+    const [existingImages] = await pool.query(
+      "SELECT url FROM product_image WHERE product_id = ?",
+      [productId]
+    );
+
+    // Get the filenames from the URLs
+    const existingFiles = existingImages.map((img) => path.basename(img.url));
+    const newFiles = newImages.map((img) => path.basename(img.url));
+
+    // Find files that are no longer used
+    const filesToDelete = existingFiles.filter(
+      (file) => !newFiles.includes(file)
+    );
+
+    // Delete unused files
+    for (const file of filesToDelete) {
+      const filePath = path.join(__dirname, "uploads/products", file);
+      await fs.unlink(filePath).catch(() => {});
+    }
+  } catch (error) {
+    console.error("Error cleaning up images:", error);
+  }
+};
+
 // Update product creation endpoint to handle images
 app.post(
   "/api/admin/products",
@@ -240,7 +268,7 @@ app.post(
           req.body.description || "",
           parseFloat(req.body.price) || 0,
           parseInt(req.body.stock) || 0,
-          req.body.sku || "",
+          req.body.sku || null,
           Boolean(req.body.is_active),
           Boolean(req.body.is_featured),
           parseFloat(req.body.cost_price) || 0,
@@ -410,7 +438,7 @@ app.put(
           description || "",
           parseFloat(price) || 0,
           parseInt(stock) || 0,
-          sku || "",
+          sku || null,
           Boolean(is_active),
           Boolean(is_featured),
           parseFloat(cost_price) || 0,
@@ -427,6 +455,9 @@ app.put(
           id,
         ]
       );
+
+      // Clean up unused images before updating image records
+      await cleanupUnusedImages(id, images);
 
       // Handle categories update
       await conn.query("DELETE FROM product_category WHERE product_id = ?", [
@@ -452,8 +483,8 @@ app.put(
           id,
           image.url,
           image.alt_text || "",
-          index, // display_order
-          index === 0, // is_primary
+          index,
+          index === 0,
         ]);
 
         await conn.query(
@@ -617,13 +648,34 @@ app.get("/api/storefront/products", async (req, res) => {
 app.get("/api/storefront/products/:id", async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, name, description, price, stock FROM product WHERE id = ? AND stock > 0",
+      `SELECT 
+        p.*,
+        CONCAT('[', 
+          GROUP_CONCAT(
+            DISTINCT 
+            JSON_OBJECT(
+              'url', pi.url,
+              'alt_text', pi.alt_text,
+              'is_primary', pi.is_primary,
+              'display_order', pi.display_order
+            )
+          ),
+        ']') as images
+      FROM product p
+      LEFT JOIN product_image pi ON p.id = pi.product_id
+      WHERE p.id = ? AND p.is_active = 1
+      GROUP BY p.id`,
       [req.params.id]
     );
+
     if (rows.length === 0) {
       return res.status(404).json({ message: "Product not found" });
     }
-    res.json(rows[0]);
+
+    const product = rows[0];
+    product.images = product.images ? JSON.parse(product.images) : [];
+
+    res.json(product);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -740,62 +792,106 @@ app.get("/api/products/:id", async (req, res) => {
 // Get user's active cart
 app.get("/api/cart", authMiddleware, async (req, res) => {
   try {
+    console.log("Fetching cart for user:", req.user.id);
     const cart = await cartDb.getActiveCart(req.user.id);
+    console.log("Active cart:", cart);
     const items = await cartDb.getCartItems(cart.id);
+    console.log("Cart items:", items);
     res.json({ ...cart, items });
   } catch (err) {
+    console.error("Error fetching cart:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
 // Add/update cart item
 app.post("/api/cart/items", authMiddleware, async (req, res) => {
+  const conn = await pool.getConnection();
   try {
-    console.group("Cart Update Request");
-    console.log("User:", req.user.id);
-    console.log("Product:", req.body.productId);
-    console.log("Quantity:", req.body.quantity);
+    await conn.beginTransaction();
 
+    console.log("Adding/updating cart item for user:", req.user.id);
     const cart = await cartDb.getActiveCart(req.user.id);
+    console.log("Active cart:", cart);
     const { productId, quantity } = req.body;
-    await cartDb.addToCart(cart.id, productId, quantity);
 
-    const [cartContents] = await pool.query(
-      `
-      SELECT 
-        p.name,
-        ci.quantity,
-        ci.price_at_time,
-        (ci.quantity * ci.price_at_time) as subtotal
-      FROM cart_item ci
-      JOIN product p ON ci.product_id = p.id
-      WHERE ci.cart_id = ?
-      ORDER BY p.name
-    `,
-      [cart.id]
+    // Get current product price and check if product exists
+    const [products] = await conn.query(
+      "SELECT id, price, stock FROM product WHERE id = ? AND is_active = 1",
+      [productId]
     );
 
-    console.log("\nUpdated Cart Contents:");
-    console.table(cartContents);
-    console.groupEnd();
+    if (products.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ error: "Product not found or inactive" });
+    }
 
+    const product = products[0];
+
+    // Check stock
+    if (product.stock < quantity) {
+      await conn.rollback();
+      return res.status(400).json({ error: "Not enough stock available" });
+    }
+
+    // Check if item exists in cart
+    const [existingItems] = await conn.query(
+      "SELECT * FROM cart_item WHERE cart_id = ? AND product_id = ?",
+      [cart.id, productId]
+    );
+
+    if (existingItems.length > 0) {
+      // Update quantity
+      await conn.query(
+        "UPDATE cart_item SET quantity = ?, price_at_time = ? WHERE cart_id = ? AND product_id = ?",
+        [quantity, product.price, cart.id, productId]
+      );
+    } else {
+      // Add new item
+      await conn.query(
+        "INSERT INTO cart_item (cart_id, product_id, quantity, price_at_time) VALUES (?, ?, ?, ?)",
+        [cart.id, productId, quantity, product.price]
+      );
+    }
+
+    await conn.commit();
+    console.log("Successfully updated cart");
     const items = await cartDb.getCartItems(cart.id);
     res.json({ ...cart, items });
   } catch (err) {
-    console.error("Cart Update Error:", err);
+    await conn.rollback();
+    console.error("Error updating cart:", err);
     res.status(500).json({ error: err.message });
+  } finally {
+    conn.release();
   }
 });
 
-// Remove cart item
+// Delete cart item
 app.delete("/api/cart/items/:productId", authMiddleware, async (req, res) => {
+  const conn = await pool.getConnection();
   try {
+    await conn.beginTransaction();
+
+    console.log("Deleting cart item for user:", req.user.id);
     const cart = await cartDb.getActiveCart(req.user.id);
-    await cartDb.removeFromCart(cart.id, req.params.productId);
+    console.log("Active cart:", cart);
+
+    await conn.query(
+      "DELETE FROM cart_item WHERE cart_id = ? AND product_id = ?",
+      [cart.id, req.params.productId]
+    );
+
+    await conn.commit();
+    console.log("Successfully deleted cart item");
     const items = await cartDb.getCartItems(cart.id);
     res.json({ ...cart, items });
   } catch (err) {
+    await conn.rollback();
+    console.error("Error deleting cart item:", err);
     res.status(500).json({ error: err.message });
+  } finally {
+    conn.release();
   }
 });
 
@@ -1165,30 +1261,30 @@ app.get(
   async (req, res) => {
     try {
       const query = `
-      SELECT 
-        p.*,
-        GROUP_CONCAT(DISTINCT pc.category_id) as category_ids,
-        GROUP_CONCAT(DISTINCT c.name) as category_names,
-        CONCAT('[', 
-          GROUP_CONCAT(
-            DISTINCT 
-            JSON_OBJECT(
-              'url', pi.url,
-              'alt_text', pi.alt_text,
-              'is_primary', pi.is_primary,
-              'display_order', pi.display_order
-            )
-          ),
-        ']') as images,
-        m.name as manufacturer_name
-      FROM product p
-      LEFT JOIN product_category pc ON p.id = pc.product_id
-      LEFT JOIN category c ON pc.category_id = c.id
-      LEFT JOIN product_image pi ON p.id = pi.product_id
-      LEFT JOIN manufacturer m ON p.manufacturer_id = m.id
-      GROUP BY p.id
-      ORDER BY p.created_at DESC
-    `;
+        SELECT 
+          p.*,
+          GROUP_CONCAT(DISTINCT pc.category_id) as category_ids,
+          GROUP_CONCAT(DISTINCT c.name) as category_names,
+          CONCAT('[', 
+            GROUP_CONCAT(
+              DISTINCT 
+              JSON_OBJECT(
+                'url', pi.url,
+                'alt_text', pi.alt_text,
+                'is_primary', pi.is_primary,
+                'display_order', pi.display_order
+              )
+            ),
+          ']') as images,
+          m.name as manufacturer_name
+        FROM product p
+        LEFT JOIN product_category pc ON p.id = pc.product_id
+        LEFT JOIN category c ON pc.category_id = c.id
+        LEFT JOIN product_image pi ON p.id = pi.product_id
+        LEFT JOIN manufacturer m ON p.manufacturer_id = m.id
+        GROUP BY p.id
+        ORDER BY p.created_at DESC
+      `;
 
       const [products] = await pool.query(query);
 
@@ -1222,271 +1318,6 @@ app.get(
     }
   }
 );
-
-app.get(
-  "/api/admin/categories",
-  authMiddleware,
-  adminMiddleware,
-  async (req, res) => {
-    try {
-      const [categories] = await pool.query(
-        "SELECT * FROM category ORDER BY display_order"
-      );
-      res.json(categories);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
-
-app.get(
-  "/api/admin/manufacturers",
-  authMiddleware,
-  adminMiddleware,
-  async (req, res) => {
-    try {
-      const [manufacturers] = await pool.query(
-        "SELECT * FROM manufacturer ORDER BY name"
-      );
-      res.json(manufacturers);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
-
-// Public storefront route
-app.get("/api/storefront/products", async (req, res) => {
-  try {
-    const [products] = await pool.query(`
-      SELECT 
-        p.*,
-        CONCAT('[', 
-          GROUP_CONCAT(
-            DISTINCT 
-            JSON_OBJECT(
-              'url', pi.url,
-              'alt_text', pi.alt_text,
-              'is_primary', pi.is_primary,
-              'display_order', pi.display_order
-            )
-          ),
-        ']') as images
-      FROM product p
-      LEFT JOIN product_image pi ON p.id = pi.product_id
-      WHERE p.is_active = 1
-      GROUP BY p.id
-      ORDER BY p.created_at DESC
-    `);
-
-    const processedProducts = products.map((product) => ({
-      ...product,
-      images: product.images ? JSON.parse(product.images) : [],
-    }));
-
-    res.json(processedProducts);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Create manufacturer
-app.post(
-  "/api/admin/manufacturers",
-  authMiddleware,
-  adminMiddleware,
-  async (req, res) => {
-    try {
-      const {
-        name,
-        code,
-        contact_name,
-        email,
-        phone,
-        website,
-        address,
-        is_active,
-        notes,
-      } = req.body;
-      const [result] = await pool.query(
-        `INSERT INTO manufacturer 
-       (name, code, contact_name, email, phone, website, address, is_active, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          name,
-          code,
-          contact_name,
-          email,
-          phone,
-          website,
-          address,
-          is_active,
-          notes,
-        ]
-      );
-      res.json({ id: result.insertId, ...req.body });
-    } catch (err) {
-      if (err.code === "ER_DUP_ENTRY") {
-        res
-          .status(400)
-          .json({ message: "A manufacturer with this code already exists" });
-      } else {
-        res.status(500).json({ message: err.message });
-      }
-    }
-  }
-);
-
-// Update manufacturer
-app.put(
-  "/api/admin/manufacturers/:id",
-  authMiddleware,
-  adminMiddleware,
-  async (req, res) => {
-    try {
-      const {
-        name,
-        code,
-        contact_name,
-        email,
-        phone,
-        website,
-        address,
-        is_active,
-        notes,
-      } = req.body;
-      await pool.query(
-        `UPDATE manufacturer 
-       SET name=?, code=?, contact_name=?, email=?, phone=?, website=?, address=?, is_active=?, notes=?
-       WHERE id=?`,
-        [
-          name,
-          code,
-          contact_name,
-          email,
-          phone,
-          website,
-          address,
-          is_active,
-          notes,
-          req.params.id,
-        ]
-      );
-      res.json({ id: req.params.id, ...req.body });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-);
-
-// Create category
-app.post(
-  "/api/admin/categories",
-  authMiddleware,
-  adminMiddleware,
-  async (req, res) => {
-    try {
-      const {
-        name,
-        description,
-        parent_id,
-        display_order,
-        is_active,
-        slug,
-        meta_title,
-        meta_description,
-        image_url,
-      } = req.body;
-      const [result] = await pool.query(
-        `INSERT INTO category 
-       (name, description, parent_id, display_order, is_active, slug, meta_title, meta_description, image_url)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          name,
-          description,
-          parent_id || null,
-          display_order || 0,
-          is_active,
-          slug,
-          meta_title,
-          meta_description,
-          image_url,
-        ]
-      );
-      res.json({ id: result.insertId, ...req.body });
-    } catch (err) {
-      if (err.code === "ER_DUP_ENTRY") {
-        res
-          .status(400)
-          .json({ message: "A category with this slug already exists" });
-      } else {
-        res.status(500).json({ message: err.message });
-      }
-    }
-  }
-);
-
-app.delete(
-  "/api/admin/products/:id",
-  authMiddleware,
-  adminMiddleware,
-  async (req, res) => {
-    const connection = await pool.getConnection();
-    try {
-      await connection.beginTransaction();
-
-      console.log("Deleting product:", req.params.id);
-
-      // Delete product categories
-      await connection.query(
-        "DELETE FROM product_category WHERE product_id = ?",
-        [req.params.id]
-      );
-
-      // Delete the product
-      await connection.query("DELETE FROM product WHERE id = ?", [
-        req.params.id,
-      ]);
-
-      await connection.commit();
-      res.json({ message: "Product deleted successfully" });
-    } catch (error) {
-      await connection.rollback();
-      console.error("Error deleting product:", error);
-      res
-        .status(500)
-        .json({ message: "Failed to delete product", error: error.message });
-    } finally {
-      connection.release();
-    }
-  }
-);
-
-// Add this after database connection check
-app.post("/setup-admin", async (req, res) => {
-  try {
-    // Check if admin exists
-    const [admins] = await pool.query(
-      "SELECT id FROM user WHERE email = 'admin@example.com'"
-    );
-
-    if (admins.length === 0) {
-      // Create admin user
-      const passwordHash = await bcrypt.hash("admin123", 10);
-      await pool.query(
-        `INSERT INTO user (email, password_hash, first_name, last_name, role, status) 
-         VALUES (?, ?, 'Admin', 'User', 'admin', 'active')`,
-        ["admin@example.com", passwordHash]
-      );
-      res.json({ message: "Admin user created successfully" });
-    } else {
-      res.json({ message: "Admin user already exists" });
-    }
-  } catch (err) {
-    console.error("Error setting up admin:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // Start server
 app.listen(PORT, () => {

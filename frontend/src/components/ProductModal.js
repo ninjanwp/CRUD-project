@@ -46,11 +46,11 @@ const ProductModal = ({ show, onClose, product, onSubmit, onDelete }) => {
     const fetchData = async () => {
       try {
         const [categoriesRes, manufacturersRes] = await Promise.all([
-          api.list("/api/admin/categories"),
-          api.list("/api/admin/manufacturers"),
+          api.list("categories"),
+          api.list("manufacturers"),
         ]);
-        setCategories(categoriesRes.data || []);
-        setManufacturers(manufacturersRes.data || []);
+        setCategories(categoriesRes || []);
+        setManufacturers(manufacturersRes || []);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to load categories or manufacturers");

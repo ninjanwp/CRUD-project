@@ -68,18 +68,30 @@ const ProductDetailsPage = () => {
         <Row>
           <Col md={6} className="mb-4">
             <Card className="border-0 shadow-sm">
-              <Card.Img
-                variant="top"
-                src={product.images?.[0]?.url || "/placeholder.jpg"}
-                alt={product.images?.[0]?.alt_text || product.name}
-                className="img-fluid"
-                style={{
-                  maxHeight: "600px",
-                  width: "100%",
-                  objectFit: "contain",
-                  padding: "2rem",
-                }}
-              />
+              {product.images?.length > 0 && product.images[0]?.url ? (
+                <Card.Img
+                  variant="top"
+                  src={`http://localhost:8000${product.images[0].url}`}
+                  alt={product.images[0]?.alt_text || product.name}
+                  className="img-fluid"
+                  style={{
+                    maxHeight: "600px",
+                    width: "100%",
+                    objectFit: "contain",
+                    padding: "2rem",
+                  }}
+                />
+              ) : (
+                <div
+                  className="d-flex align-items-center justify-content-center bg-light"
+                  style={{ height: "600px" }}
+                >
+                  <i
+                    className="bi bi-image text-muted"
+                    style={{ fontSize: "5rem" }}
+                  ></i>
+                </div>
+              )}
             </Card>
           </Col>
           <Col md={6}>
@@ -89,35 +101,16 @@ const ProductDetailsPage = () => {
                 <h2 className="h3 text-primary mb-2">
                   {formatCurrency(product.price)}
                 </h2>
-                {product.compare_at_price && (
+                {product.compare_at_price > 0 && (
                   <p className="text-muted text-decoration-line-through mb-2">
                     {formatCurrency(product.compare_at_price)}
                   </p>
                 )}
-                <p className="text-muted mb-3">
-                  Stock:{" "}
-                  {product.stock > 0
-                    ? `${product.stock} units`
-                    : "Out of stock"}
-                  {product.low_stock_threshold &&
-                    product.stock <= product.low_stock_threshold && (
-                      <Badge bg="warning" className="ms-2">
-                        Low Stock
-                      </Badge>
-                    )}
-                </p>
+                {product.stock === 0 && (
+                  <p className="text-danger mb-3">Out of stock</p>
+                )}
                 {product.sku && (
                   <p className="text-muted small mb-2">SKU: {product.sku}</p>
-                )}
-                {product.weight && (
-                  <p className="text-muted small mb-2">
-                    Weight: {product.weight}g
-                  </p>
-                )}
-                {product.dimensions && (
-                  <p className="text-muted small mb-2">
-                    Dimensions: {product.dimensions}
-                  </p>
                 )}
                 {product.category_names && (
                   <div className="mb-3">
