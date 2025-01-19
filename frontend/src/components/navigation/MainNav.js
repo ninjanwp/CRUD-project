@@ -1,9 +1,9 @@
-import { Navbar, Nav, Container, Button, Dropdown } from 'react-bootstrap';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { useState, useEffect } from 'react';
-import CartPreview from '../cart/CartPreview';
-import { useCart } from '../../context/CartContext';
+import { Navbar, Nav, Container, Button, Dropdown } from "react-bootstrap";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { useState, useEffect } from "react";
+import CartPreview from "../cart/CartPreview";
+import { useCart } from "../../context/CartContext";
 
 const MainNav = () => {
   const { user, logout } = useAuth();
@@ -11,20 +11,20 @@ const MainNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [, forceUpdate] = useState({});
-  const isAdminSection = location.pathname.startsWith('/admin');
+  const isAdminSection = location.pathname.startsWith("/admin");
 
   useEffect(() => {
     const handleAuthChange = () => forceUpdate({});
-    window.addEventListener('auth-change', handleAuthChange);
-    return () => window.removeEventListener('auth-change', handleAuthChange);
+    window.addEventListener("auth-change", handleAuthChange);
+    return () => window.removeEventListener("auth-change", handleAuthChange);
   }, []);
 
   const handleLogout = () => {
     logout();
-    if (location.pathname === '/') {
+    if (location.pathname === "/") {
       navigate(0);
     } else {
-      navigate('/');
+      navigate("/");
     }
   };
 
@@ -73,15 +73,17 @@ const MainNav = () => {
             )}
           </Nav>
           <Nav className="align-items-center gap-3">
-            <Nav.Link as={Link} to="/cart" className="cart-link">
-              <i className="bi bi-cart3 cart-icon"></i>
-              {cart.length > 0 && (
-                <span className="badge rounded-pill bg-primary cart-badge">
-                  {cart.reduce((acc, item) => acc + item.quantity, 0)}
-                </span>
-              )}
+            <div className="position-relative cart-link">
+              <Nav.Link as={Link} to="/cart">
+                <i className="bi bi-cart3 cart-icon"></i>
+                {cart.length > 0 && (
+                  <span className="badge rounded-pill bg-primary cart-badge">
+                    {cart.reduce((acc, item) => acc + item.quantity, 0)}
+                  </span>
+                )}
+              </Nav.Link>
               <CartPreview />
-            </Nav.Link>
+            </div>
             {user ? (
               <Dropdown align="end">
                 <Dropdown.Toggle
@@ -128,4 +130,4 @@ const MainNav = () => {
   );
 };
 
-export default MainNav; 
+export default MainNav;

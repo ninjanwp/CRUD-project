@@ -1,12 +1,11 @@
-import axios from 'axios';
-import auth from './auth';
-import { toast } from 'react-hot-toast';
+import axios from "axios";
+import auth from "./auth";
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: "http://localhost:8000",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -17,59 +16,65 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
-}, (error) => {
-  return Promise.reject(error);
 });
 
-// Add response interceptor for handling auth errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      auth.logout();
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
+// Define API endpoints
+const endpoints = {
+  users: "/api/admin/users",
+  products: "/api/admin/products",
+  orders: "/api/admin/orders",
+  categories: "/api/admin/categories",
+  manufacturers: "/api/admin/manufacturers",
+  attributes: "/api/admin/attributes",
+  auth: {
+    login: "/auth/login",
+    register: "/auth/register",
+    profile: "/auth/profile",
+  },
+};
 
-// Add API methods to the existing api instance
-Object.assign(api, {
-  async list(endpoint) {
-    console.log('Fetching', endpoint, 'from', this.baseURL);
-    const response = await this.get(`${endpoint}`);
-    return response.data;
+// Add API methods
+const apiService = {
+  async list(resource) {
+    console.log("Fetching", resource, "from", endpoints[resource] || resource);
+    try {
+      const response = await api.get(endpoints[resource] || resource);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching", resource + ":", error);
+      throw error;
+    }
   },
 
   async create(endpoint, data) {
     try {
-      const response = await this.post(`${endpoint}`, data);
+      const response = await api.post(`${endpoint}`, data);
       return response.data;
     } catch (error) {
-      console.error('Error creating', endpoint + ':', error);
+      console.error("Error creating", endpoint + ":", error);
       throw error;
     }
   },
 
   async update(endpoint, id, data) {
     try {
-      const response = await this.put(`${endpoint}/${id}`, data);
+      const response = await api.put(`${endpoint}/${id}`, data);
       return response.data;
     } catch (error) {
-      console.error('Error updating', endpoint + ':', error);
+      console.error("Error updating", endpoint + ":", error);
       throw error;
     }
   },
 
   async delete(endpoint, id) {
     try {
-      const response = await this.delete(`${endpoint}/${id}`);
+      const response = await api.delete(`${endpoint}/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error deleting', endpoint + ':', error);
+      console.error("Error deleting", endpoint + ":", error);
       throw error;
     }
-  }
-});
+  },
+};
 
-export default api;
+export default apiService;

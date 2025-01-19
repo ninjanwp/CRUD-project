@@ -6,12 +6,12 @@ DROP TABLE IF EXISTS `order_item`;
 DROP TABLE IF EXISTS `cart_item`;
 DROP TABLE IF EXISTS `product_image`;
 DROP TABLE IF EXISTS `product_category`;
+DROP TABLE IF EXISTS `inventory_transaction`;
 DROP TABLE IF EXISTS `variant_attribute_value`;
 DROP TABLE IF EXISTS `product_variant`;
 DROP TABLE IF EXISTS `attribute_value`;
 DROP TABLE IF EXISTS `attribute`;
 DROP TABLE IF EXISTS `attribute_group`;
-DROP TABLE IF EXISTS `inventory_transaction`;
 DROP TABLE IF EXISTS `discount_use`;
 DROP TABLE IF EXISTS `order`;
 DROP TABLE IF EXISTS `cart`;
@@ -88,50 +88,15 @@ CREATE TABLE `category` (
   `name` varchar(255) NOT NULL,
   `slug` varchar(255) NOT NULL UNIQUE,
   `description` text,
-  `image_url` varchar(255),
-  `is_active` boolean DEFAULT true,
   `display_order` int DEFAULT 0,
+  `is_active` boolean DEFAULT true,
   `meta_title` varchar(255),
   `meta_description` text,
+  `image_url` varchar(2048),
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`parent_id`) REFERENCES `category`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `attribute_group` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL,
-  `display_order` int DEFAULT 0,
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `attribute` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `group_id` int,
-  `name` varchar(255) NOT NULL,
-  `code` varchar(50) NOT NULL UNIQUE,
-  `type` ENUM('text', 'number', 'boolean', 'select', 'multi_select', 'color', 'date') NOT NULL,
-  `is_required` boolean DEFAULT false,
-  `is_filterable` boolean DEFAULT false,
-  `is_variant` boolean DEFAULT false,
-  `validation_rules` JSON,
-  `display_order` int DEFAULT 0,
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`group_id`) REFERENCES `attribute_group`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `attribute_value` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `attribute_id` int NOT NULL,
-  `value` varchar(255) NOT NULL,
-  `display_order` int DEFAULT 0,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`attribute_id`) REFERENCES `attribute`(`id`) ON DELETE CASCADE,
-  UNIQUE KEY `attr_value_unique` (`attribute_id`, `value`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `product` (
@@ -139,11 +104,21 @@ CREATE TABLE `product` (
   `manufacturer_id` int,
   `tax_class_id` int,
   `name` varchar(255) NOT NULL,
-  `slug` varchar(255) NOT NULL UNIQUE,
+  `slug` varchar(255) NOT NULL,
   `description` text,
+  `price` decimal(10,2) NOT NULL DEFAULT 0,
+  `stock` int NOT NULL DEFAULT 0,
+  `sku` varchar(64) UNIQUE,
   `is_active` boolean DEFAULT true,
   `is_featured` boolean DEFAULT false,
   `is_digital` boolean DEFAULT false,
+  `cost_price` decimal(10,2),
+  `compare_at_price` decimal(10,2),
+  `weight` decimal(10,2),
+  `width` decimal(10,2),
+  `height` decimal(10,2),
+  `length` decimal(10,2),
+  `low_stock_threshold` int,
   `meta_title` varchar(255),
   `meta_description` text,
   `warranty_info` text,
@@ -153,37 +128,6 @@ CREATE TABLE `product` (
   PRIMARY KEY (`id`),
   FOREIGN KEY (`manufacturer_id`) REFERENCES `manufacturer`(`id`) ON DELETE SET NULL,
   FOREIGN KEY (`tax_class_id`) REFERENCES `tax_class`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `product_variant` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `product_id` int NOT NULL,
-  `sku` varchar(100) NOT NULL UNIQUE,
-  `barcode` varchar(100) UNIQUE,
-  `price` decimal(10,2) NOT NULL,
-  `compare_at_price` decimal(10,2),
-  `cost_price` decimal(10,2),
-  `stock` int NOT NULL DEFAULT 0,
-  `low_stock_threshold` int,
-  `weight` decimal(10,2),
-  `width` decimal(10,2),
-  `height` decimal(10,2),
-  `length` decimal(10,2),
-  `is_active` boolean DEFAULT true,
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`product_id`) REFERENCES `product`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `variant_attribute_value` (
-  `variant_id` int NOT NULL,
-  `attribute_id` int NOT NULL,
-  `value_id` int NOT NULL,
-  PRIMARY KEY (`variant_id`, `attribute_id`),
-  FOREIGN KEY (`variant_id`) REFERENCES `product_variant`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`attribute_id`) REFERENCES `attribute`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`value_id`) REFERENCES `attribute_value`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `product_image` (
@@ -206,16 +150,68 @@ CREATE TABLE `product_category` (
   FOREIGN KEY (`category_id`) REFERENCES `category`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `cart` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `status` ENUM('active', 'converted', 'abandoned') DEFAULT 'active',
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `cart_item` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `cart_id` int NOT NULL,
+  `product_id` int NOT NULL,
+  `quantity` int NOT NULL DEFAULT 1,
+  `price_at_time` decimal(10,2) NOT NULL,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`cart_id`) REFERENCES `cart`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`product_id`) REFERENCES `product`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `order` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `status` ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',
+  `total_amount` decimal(10,2) NOT NULL,
+  `shipping_address` text NOT NULL,
+  `billing_address` text NOT NULL,
+  `payment_method` varchar(50),
+  `shipping_method` varchar(50),
+  `tracking_number` varchar(100),
+  `notes` text,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `order_item` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `order_id` int NOT NULL,
+  `product_id` int NOT NULL,
+  `quantity` int NOT NULL,
+  `price_at_time` decimal(10,2) NOT NULL,
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`order_id`) REFERENCES `order`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`product_id`) REFERENCES `product`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `inventory_transaction` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `variant_id` int NOT NULL,
+  `product_id` int NOT NULL,
   `type` ENUM('purchase', 'sale', 'adjustment', 'return') NOT NULL,
   `quantity` int NOT NULL,
   `reference_id` varchar(100),
   `notes` text,
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`variant_id`) REFERENCES `product_variant`(`id`) ON DELETE CASCADE
+  FOREIGN KEY (`product_id`) REFERENCES `product`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `discount` (
@@ -233,68 +229,15 @@ CREATE TABLE `discount` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `cart` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
-  `status` ENUM('active', 'converted', 'abandoned') DEFAULT 'active',
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `cart_item` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `cart_id` int NOT NULL,
-  `variant_id` int NOT NULL,
-  `quantity` int NOT NULL DEFAULT 1,
-  `price_at_time` decimal(10,2) NOT NULL,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`cart_id`) REFERENCES `cart`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`variant_id`) REFERENCES `product_variant`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `order` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
-  `status` ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',
-  `subtotal` decimal(10,2) NOT NULL,
-  `tax_amount` decimal(10,2) NOT NULL DEFAULT 0,
-  `shipping_amount` decimal(10,2) NOT NULL DEFAULT 0,
-  `discount_amount` decimal(10,2) NOT NULL DEFAULT 0,
-  `total_amount` decimal(10,2) NOT NULL,
-  `shipping_address` text,
-  `billing_address` text,
-  `shipping_method` varchar(100),
-  `payment_method` varchar(100),
-  `notes` text,
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `order_item` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `order_id` int NOT NULL,
-  `variant_id` int NOT NULL,
-  `quantity` int NOT NULL,
-  `price_at_time` decimal(10,2) NOT NULL,
-  `tax_rate` decimal(5,2) NOT NULL DEFAULT 0,
-  `tax_amount` decimal(10,2) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`order_id`) REFERENCES `order`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`variant_id`) REFERENCES `product_variant`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 CREATE TABLE `discount_use` (
   `id` int NOT NULL AUTO_INCREMENT,
   `discount_id` int NOT NULL,
+  `user_id` int NOT NULL,
   `order_id` int NOT NULL,
-  `amount` decimal(10,2) NOT NULL,
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `used_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`discount_id`) REFERENCES `discount`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`order_id`) REFERENCES `order`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -334,9 +277,6 @@ CREATE INDEX idx_product_active ON `product`(is_active);
 CREATE INDEX idx_product_featured ON `product`(is_featured);
 CREATE INDEX idx_category_active ON `category`(is_active);
 CREATE INDEX idx_category_parent ON `category`(parent_id);
-CREATE INDEX idx_variant_sku ON `product_variant`(sku);
-CREATE INDEX idx_variant_stock ON `product_variant`(stock);
-CREATE INDEX idx_variant_price ON `product_variant`(price);
 CREATE INDEX idx_order_user ON `order`(user_id);
 CREATE INDEX idx_order_status ON `order`(status);
 CREATE INDEX idx_cart_user ON `cart`(user_id);

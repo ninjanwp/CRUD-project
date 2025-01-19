@@ -1,8 +1,8 @@
-import React from 'react';
-import { Card, ListGroup, Button, Image } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
-import { formatCurrency } from '../../utils/formatters';
+import React from "react";
+import { Card, ListGroup, Button, Image } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
+import { formatCurrency } from "../../utils/formatters";
 
 const CartPreview = () => {
   const { cart, total } = useCart();
@@ -21,27 +21,41 @@ const CartPreview = () => {
   return (
     <Card className="cart-preview shadow">
       <Card.Header className="bg-white">
-        <h6 className="mb-0">Cart ({cart.reduce((acc, item) => acc + item.quantity, 0)} items)</h6>
+        <h6 className="mb-0">
+          Cart ({cart.reduce((acc, item) => acc + item.quantity, 0)} items)
+        </h6>
       </Card.Header>
-      <ListGroup variant="flush" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-        {cart.slice(0, 3).map(item => (
+      <ListGroup
+        variant="flush"
+        style={{ maxHeight: "300px", overflowY: "auto" }}
+      >
+        {cart.slice(0, 3).map((item) => (
           <ListGroup.Item key={item.productId} className="py-2">
-            <div className="d-flex gap-2">
-              <Image 
-                src={item.image} 
+            <Link
+              to={`/products/${item.productId}`}
+              className="text-decoration-none d-flex gap-2"
+            >
+              <Image
+                src={item.image}
                 alt={item.name}
-                style={{ width: '50px', height: '50px', objectFit: 'contain' }}
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  objectFit: "contain",
+                }}
               />
               <div className="flex-grow-1">
-                <Link to={`/products/${item.productId}`} className="text-decoration-none">
-                  <div className="small fw-medium text-truncate">{item.name}</div>
-                </Link>
+                <div className="small fw-medium text-truncate">{item.name}</div>
                 <div className="d-flex justify-content-between align-items-center mt-1">
-                  <small className="text-muted">{item.quantity} × {formatCurrency(item.price)}</small>
-                  <span className="small fw-medium">{formatCurrency(item.price * item.quantity)}</span>
+                  <small className="text-muted">
+                    {item.quantity} × {formatCurrency(item.price)}
+                  </small>
+                  <span className="small fw-medium">
+                    {formatCurrency(item.price * item.quantity)}
+                  </span>
                 </div>
               </div>
-            </div>
+            </Link>
           </ListGroup.Item>
         ))}
         {cart.length > 3 && (
@@ -56,11 +70,13 @@ const CartPreview = () => {
           <span className="fw-bold">{formatCurrency(total)}</span>
         </div>
         <div className="d-grid gap-2">
-          <Link to="/cart" className="btn btn-primary">View Cart</Link>
+          <Link to="/cart" className="btn btn-primary">
+            View Cart
+          </Link>
         </div>
       </Card.Footer>
     </Card>
   );
 };
 
-export default CartPreview; 
+export default CartPreview;

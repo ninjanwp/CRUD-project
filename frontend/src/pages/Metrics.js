@@ -1,17 +1,18 @@
-import React from 'react';
-import { Row, Col, Card, Image } from 'react-bootstrap';
-import useTableData from '../hooks/useTableData';
-import { formatCurrency } from '../utils/formatters';
+import React from "react";
+import { Row, Col, Card, Image } from "react-bootstrap";
+import useTableData from "../hooks/useTableData";
+import { formatCurrency } from "../utils/formatters";
 
 const Metrics = () => {
-  const { data: products } = useTableData('products');
-  const { data: orders } = useTableData('orders');
+  const { data: products } = useTableData("products");
+  const { data: orders } = useTableData("orders");
 
   // Calculate metrics
-  const totalInventoryValue = products.reduce((sum, product) => 
-    sum + (product.price * product.stock), 0
+  const totalInventoryValue = products.reduce(
+    (sum, product) => sum + product.price * product.stock,
+    0
   );
-  const lowStockItems = products.filter(product => product.stock < 10);
+  const lowStockItems = products.filter((product) => product.stock < 10);
   const totalOrders = orders.length;
   const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
   const averageOrderValue = totalOrders ? totalRevenue / totalOrders : 0;
@@ -29,7 +30,9 @@ const Metrics = () => {
         <Col md={3}>
           <Card className="h-100">
             <Card.Body>
-              <Card.Title style={{ color: '#4f46e5' }}>Total Revenue</Card.Title>
+              <Card.Title style={{ color: "#4f46e5" }}>
+                Total Revenue
+              </Card.Title>
               <h3>{formatCurrency(totalRevenue)}</h3>
               <small className="text-muted">Lifetime revenue</small>
             </Card.Body>
@@ -89,7 +92,12 @@ const Metrics = () => {
           <Card className="h-100">
             <Card.Body>
               <Card.Title>Average Stock Level</Card.Title>
-              <h3>{Math.round(products.reduce((sum, p) => sum + p.stock, 0) / products.length || 0)}</h3>
+              <h3>
+                {Math.round(
+                  products.reduce((sum, p) => sum + p.stock, 0) /
+                    products.length || 0
+                )}
+              </h3>
               <small className="text-muted">Units per product</small>
             </Card.Body>
           </Card>
@@ -114,19 +122,28 @@ const Metrics = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {lowStockItems.map(item => (
+                    {lowStockItems.map((item) => (
                       <tr key={item.id}>
-                        <td style={{ width: '80px' }}>
-                          <Image 
-                            src={item.image} 
+                        <td style={{ width: "80px" }}>
+                          <Image
+                            src={item.image}
                             alt={item.name}
-                            style={{ width: '50px', height: '50px', objectFit: 'contain' }}
+                            style={{
+                              width: "50px",
+                              height: "50px",
+                              objectFit: "contain",
+                            }}
                           />
                         </td>
                         <td>{item.name}</td>
                         <td>{item.stock}</td>
-                        <td>{formatCurrency(item.price)}</td>
-                        <td>{formatCurrency(item.price * item.stock)}</td>
+                        <td>{formatCurrency(parseFloat(item.price) || 0)}</td>
+                        <td>
+                          {formatCurrency(
+                            (parseFloat(item.price) || 0) *
+                              (parseInt(item.stock) || 0)
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -140,4 +157,4 @@ const Metrics = () => {
   );
 };
 
-export default Metrics; 
+export default Metrics;
