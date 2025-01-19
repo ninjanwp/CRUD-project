@@ -23,7 +23,6 @@ const ProductGrid = ({ products }) => {
       {products.map((product) => (
         <Col key={product.id}>
           <Card
-            data-aos="fade"
             className="h-100 shadow-lg product-card d-flex flex-column pb-2">
             <Link
               to={`/products/${product.id}`}
@@ -59,8 +58,11 @@ const ProductGrid = ({ products }) => {
               </Card.Body>
             </Link>
             <Card.Footer className="bg-transparent">
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <span className="h5 mb-0">{formatCurrency(product.price)}</span>
+              <div className="d-flex gap-2 align-items-center mb-2">
+                <span className="h5 mb-0 text-primary">{formatCurrency(product.price)}</span>
+                <span className="text-decoration-line-through text-muted">
+                  {formatCurrency(product.compare_at_price)}
+                </span>
               </div>
               <Button
                 variant="outline-dark"
@@ -72,6 +74,7 @@ const ProductGrid = ({ products }) => {
                 className="w-100"
               >
                 {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+                <i className="bi bi-cart ms-2"></i>
               </Button>
             </Card.Footer>
           </Card>

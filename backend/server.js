@@ -559,45 +559,92 @@ app.put(
   }
 );
 
-// Delete a product
-app.delete("/api/products/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
+// Update the delete product endpoint to use the admin prefix
+app.delete(
+  "/api/admin/products/:id",
+  requireAuth,
+  adminMiddleware,
+  async (req, res) => {
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
 
-    const [result] = await pool.query("DELETE FROM product WHERE id = ?", [id]);
+      const { id } = req.params;
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Product not found" });
+      // Delete related records first
+      await conn.query("DELETE FROM product_category WHERE product_id = ?", [
+        id,
+      ]);
+      await conn.query("DELETE FROM product_image WHERE product_id = ?", [id]);
+      await conn.query("DELETE FROM cart_item WHERE product_id = ?", [id]);
+
+      // Delete the product
+      const [result] = await conn.query("DELETE FROM product WHERE id = ?", [
+        id,
+      ]);
+
+      if (result.affectedRows === 0) {
+        await conn.rollback();
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      await conn.commit();
+      res.json({ message: "Product deleted successfully" });
+    } catch (err) {
+      await conn.rollback();
+      console.error("Error deleting product:", err);
+      res.status(500).json({ error: err.message });
+    } finally {
+      conn.release();
     }
-
-    res.json({ message: "Product deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
-});
+);
 
-// Add this new endpoint for bulk delete
-app.delete("/api/products", async (req, res) => {
-  try {
-    const { ids } = req.body;
+// Update the bulk delete endpoint to use the admin prefix
+app.delete(
+  "/api/admin/products",
+  requireAuth,
+  adminMiddleware,
+  async (req, res) => {
+    const conn = await pool.getConnection();
+    try {
+      const { ids } = req.body;
 
-    if (!ids || !Array.isArray(ids)) {
-      return res
-        .status(400)
-        .json({ message: "Invalid request: ids array required" });
+      if (!ids || !Array.isArray(ids)) {
+        return res
+          .status(400)
+          .json({ message: "Invalid request: ids array required" });
+      }
+
+      await conn.beginTransaction();
+
+      // Delete related records first
+      await conn.query("DELETE FROM product_category WHERE product_id IN (?)", [
+        ids,
+      ]);
+      await conn.query("DELETE FROM product_image WHERE product_id IN (?)", [
+        ids,
+      ]);
+      await conn.query("DELETE FROM cart_item WHERE product_id IN (?)", [ids]);
+
+      // Delete the products
+      const [result] = await conn.query("DELETE FROM product WHERE id IN (?)", [
+        ids,
+      ]);
+
+      await conn.commit();
+      res.json({
+        message: `${result.affectedRows} products deleted successfully`,
+      });
+    } catch (err) {
+      await conn.rollback();
+      console.error("Error deleting products:", err);
+      res.status(500).json({ error: err.message });
+    } finally {
+      conn.release();
     }
-
-    const [result] = await pool.query("DELETE FROM product WHERE id IN (?)", [
-      ids,
-    ]);
-
-    res.json({
-      message: `${result.affectedRows} products deleted successfully`,
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
-});
+);
 
 // Import routes
 const ordersRouter = require("./routes/orders");
@@ -1329,6 +1376,150 @@ app.get(
       res
         .status(500)
         .json({ message: "Failed to fetch products", error: error.message });
+    }
+  }
+);
+
+// Add this with your other admin routes
+app.get(
+  "/api/admin/categories",
+  requireAuth,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const [rows] = await pool.query(`
+      SELECT c.*, 
+             COUNT(DISTINCT pc.product_id) as products_count
+      FROM category c
+      LEFT JOIN product_category pc ON c.id = pc.category_id
+      GROUP BY c.id
+      ORDER BY c.display_order ASC, c.name ASC
+    `);
+      res.json(rows);
+    } catch (err) {
+      console.error("Error fetching categories:", err);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+// Add/update category management endpoints
+app.post(
+  "/api/admin/categories",
+  requireAuth,
+  adminMiddleware,
+  async (req, res) => {
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      const { name, description, display_order } = req.body;
+      const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+      const [result] = await conn.query(
+        "INSERT INTO category (name, description, display_order, slug) VALUES (?, ?, ?, ?)",
+        [name, description || "", display_order || 0, slug]
+      );
+
+      await conn.commit();
+
+      const [category] = await conn.query(
+        "SELECT * FROM category WHERE id = ?",
+        [result.insertId]
+      );
+
+      res.status(201).json(category[0]);
+    } catch (err) {
+      await conn.rollback();
+      console.error("Error creating category:", err);
+      res.status(500).json({ error: err.message });
+    } finally {
+      conn.release();
+    }
+  }
+);
+
+app.put(
+  "/api/admin/categories/:id",
+  requireAuth,
+  adminMiddleware,
+  async (req, res) => {
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      const { id } = req.params;
+      const { name, description, display_order } = req.body;
+      const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+      const [result] = await conn.query(
+        "UPDATE category SET name = ?, description = ?, display_order = ?, slug = ? WHERE id = ?",
+        [name, description || "", display_order || 0, slug, id]
+      );
+
+      if (result.affectedRows === 0) {
+        await conn.rollback();
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      await conn.commit();
+
+      const [category] = await conn.query(
+        "SELECT * FROM category WHERE id = ?",
+        [id]
+      );
+
+      res.json(category[0]);
+    } catch (err) {
+      await conn.rollback();
+      console.error("Error updating category:", err);
+      res.status(500).json({ error: err.message });
+    } finally {
+      conn.release();
+    }
+  }
+);
+
+app.delete(
+  "/api/admin/categories/:id",
+  requireAuth,
+  adminMiddleware,
+  async (req, res) => {
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      const { id } = req.params;
+
+      // First remove category associations
+      await conn.query("DELETE FROM product_category WHERE category_id = ?", [
+        id,
+      ]);
+
+      // Then delete the category
+      const [result] = await conn.query("DELETE FROM category WHERE id = ?", [
+        id,
+      ]);
+
+      if (result.affectedRows === 0) {
+        await conn.rollback();
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      await conn.commit();
+      res.json({ message: "Category deleted successfully" });
+    } catch (err) {
+      await conn.rollback();
+      console.error("Error deleting category:", err);
+      res.status(500).json({ error: err.message });
+    } finally {
+      conn.release();
     }
   }
 );

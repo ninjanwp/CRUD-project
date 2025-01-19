@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form } from 'react-bootstrap';
 import axios from 'axios';
 import ProductGrid from '../components/storefront/ProductGrid';
+import { easeInOut, motion } from "framer-motion";
 
 const StorefrontPage = () => {
   const [products, setProducts] = useState([]);
@@ -30,12 +31,18 @@ const StorefrontPage = () => {
 
   return (
     <div className="min-vh-100 mb-5">
-      <Col
-        data-aos="fade"
-        className="text-center py-5">
-        <h1 className="display-1 fw-semibold"><i className="bi bi-shop"></i> Storefront</h1>
-        <p className="lead text-primary">Shop with us</p>
-        <hr />
+      <Col className="text-center py-5">
+        <h1 className="display-1 fw-semibold">
+          <i className="bi bi-shop"></i> Storefront
+        </h1>
+        <motion.p
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.2, type: "spring", bounce: 0.5 }}
+          className="lead text-primary"
+        >
+          Shop with us
+        </motion.p>
       </Col>
       <div className="bg-primary text-white py-5 mb-4">
         <Container>

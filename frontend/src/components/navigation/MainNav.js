@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect } from "react";
 import CartPreview from "../cart/CartPreview";
 import { useCart } from "../../context/CartContext";
+import ScrollProgress from "../ScrollProgress";
 
 const MainNav = () => {
   const { user, logout } = useAuth();
@@ -33,7 +34,7 @@ const MainNav = () => {
       variant={isAdminSection ? "dark" : "light"}
       expand="lg"
       fixed="top"
-      className={`shadow ${isAdminSection ? "navbar-custom" : "bg-white"}`}
+      className={`${isAdminSection ? "navbar-custom" : "blurred-bg"}`}
     >
       <Container>
         <Navbar.Brand as={Link} to="/">
@@ -126,6 +127,7 @@ const MainNav = () => {
           </Nav>
         </Navbar.Collapse>
       </Container>
+      <ScrollProgress />
     </Navbar>
   );
 };

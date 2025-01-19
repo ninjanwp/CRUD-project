@@ -20,9 +20,9 @@ import InventoryPage from "./pages/InventoryPage";
 import InventoryDashboard from "./pages/InventoryDashboard";
 import { SettingsProvider } from "./context/SettingsContext";
 import React, { useEffect } from "react";
-
-import AOS from "aos";
-import "aos/dist/aos.css";
+import { motion } from "framer-motion";
+import ScrollToTop from "./components/ScrollToTop";
+import CategoriesPage from "./pages/admin/CategoriesPage";
 
 // Initialize AOS in your App.js useEffect
 
@@ -32,12 +32,6 @@ function App() {
     const darkModeMediaQuery = window.matchMedia(
       "(prefers-color-scheme: dark)"
     );
-
-      AOS.init({
-        duration: 800,
-        once: true,
-        offset: 100,
-      });
 
     // Set initial theme
     document.documentElement.setAttribute(
@@ -63,6 +57,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <SettingsProvider>
           <CartProvider>
@@ -123,6 +118,14 @@ function App() {
                     element={
                       <ProtectedRoute requireAdmin={true}>
                         <Metrics />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/categories"
+                    element={
+                      <ProtectedRoute requireAdmin={true}>
+                        <CategoriesPage />
                       </ProtectedRoute>
                     }
                   />

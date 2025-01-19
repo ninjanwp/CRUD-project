@@ -25,7 +25,7 @@
 .card {
   background-color: var(--bs-card-bg);
   border-color: var(--bs-border-color);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 /* Table styles */
@@ -50,7 +50,8 @@
 }
 
 /* Add styles for selected rows */
-.table tr.selected, .table tr:hover.selected {
+.table tr.selected,
+.table tr:hover.selected {
   background-color: var(--table-selected-bg);
 }
 
@@ -173,20 +174,20 @@
 
 /* Animation durations */
 .modal.fade .modal-dialog {
-  transition: transform .2s ease-out;
+  transition: transform 0.2s ease-out;
 }
 
 .fade {
-  transition: opacity .15s linear;
+  transition: opacity 0.15s linear;
 }
 
 .collapse {
-  transition: height .35s ease;
+  transition: height 0.35s ease;
 }
 
 /* Card hover animation */
 .dashboard-card {
-  transition: transform .2s ease-in-out;
+  transition: transform 0.2s ease-in-out;
   border: 1px solid var(--bs-secondary);
 }
 
@@ -202,8 +203,6 @@
 .navbar-custom .nav-link:hover i {
   transform: translateX(3px) rotate(5deg);
 }
-
-
 
 /* Add these table styles */
 .table-fixed {
@@ -278,10 +277,10 @@
 }
 
 .custom-checkbox:checked::after {
-  content: '\F633'; /* Bootstrap icon check */
+  content: "\F633"; /* Bootstrap icon check */
   font-family: "bootstrap-icons";
   color: var(--bs-primary);
-  font-size: 12px; 
+  font-size: 12px;
 }
 
 .custom-checkbox:hover {
@@ -308,8 +307,11 @@
 
 /* If you're using it in a modal header, you might want this too */
 .modal-header .btn-close {
-  padding: calc(var(--bs-modal-header-padding-y) * .5) calc(var(--bs-modal-header-padding-x) * .5);
-  margin: calc(var(--bs-modal-header-padding-y) * -.5) calc(var(--bs-modal-header-padding-x) * -.5) calc(var(--bs-modal-header-padding-y) * -.5) auto;
+  padding: calc(var(--bs-modal-header-padding-y) * 0.5)
+    calc(var(--bs-modal-header-padding-x) * 0.5);
+  margin: calc(var(--bs-modal-header-padding-y) * -0.5)
+    calc(var(--bs-modal-header-padding-x) * -0.5)
+    calc(var(--bs-modal-header-padding-y) * -0.5) auto;
 }
 
 /* Add/update modal styles */
@@ -382,11 +384,11 @@
 }
 
 .table tr {
-    border-left: 3px solid transparent;
+  border-left: 3px solid transparent;
 }
 
 .table tr.selected {
-    border-left: 3px solid var(--bs-primary);
+  border-left: 3px solid var(--bs-primary);
 }
 
 .hover-shadow {
@@ -395,7 +397,7 @@
 
 .hover-shadow:hover {
   transform: translateY(-2px);
-  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
 .min-vh-100 {
@@ -497,7 +499,6 @@
 .storefront-search .input-group-text {
   background: white;
   border: none;
-
 }
 
 .storefront-search .form-control {
@@ -537,12 +538,7 @@
 }
 
 .product-card {
-  transition: all 0.2s ease-in-out;
   border: 1px solid var(--bs-secondary);
-}
-
-.product-card:hover {
-  transform: translateY(-5px);
 }
 
 .card-img-top {
@@ -551,7 +547,6 @@
   object-fit: cover;
   padding: 1rem;
   transition: transform 0.3s ease-in-out;
-
 }
 
 .product-card:hover .card-img-top {
@@ -590,7 +585,7 @@
 }
 
 .cart-preview::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -8px;
   left: 1rem;
@@ -611,9 +606,9 @@
   align-items: center;
   justify-content: center;
   vertical-align: middle;
-  background-color: #FFD700 !important;
+  background-color: #ffd700 !important;
   color: #000 !important;
-  border: 1px solid #DAA520;
+  border: 1px solid #daa520;
 }
 
 .nav.align-items-center {
@@ -638,15 +633,15 @@
 }
 
 .admin-role-badge {
-  background-color: #FFD700 !important;
+  background-color: #ffd700 !important;
   color: #000 !important;
-  border: 1px solid #DAA520;
+  border: 1px solid #daa520;
 }
 
 .admin-indicator {
-  background-color: #FFD700;
+  background-color: #ffd700;
   color: #000;
-  border: 1px solid #DAA520;
+  border: 1px solid #daa520;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.875rem;
@@ -656,7 +651,7 @@
 }
 
 .admin-indicator .bi-shield-lock-fill {
-  color: #DAA520;
+  color: #daa520;
 }
 
 /* Override Bootstrap badge colors for admin badges */
@@ -664,9 +659,9 @@
 .admin-badge.bg-primary,
 .admin-badge.bg-secondary,
 .admin-badge.bg-info {
-  background-color: #FFD700 !important;
+  background-color: #ffd700 !important;
   color: #000 !important;
-  border: 1px solid #DAA520;
+  border: 1px solid #daa520;
 }
 
 .modal-90w {
@@ -829,7 +824,7 @@
 }
 
 .status-toggle::before {
-  content: '';
+  content: "";
   position: absolute;
   width: 50%;
   height: 100%;

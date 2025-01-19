@@ -7,7 +7,8 @@ import { useCart } from "../context/CartContext";
 import api from "../services/api";
 import Layout from "../components/Layout";
 import { toast } from "react-hot-toast";
-
+import { easeInOut, motion } from "framer-motion";
+import Spinner from "../components/Spinner";
 const ProductDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -27,12 +28,11 @@ const ProductDetailsPage = () => {
           throw new Error("Product not found");
         }
         setProduct(data);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching product:", error);
         toast.error("Product not found");
         navigate("/"); // Redirect to home if product not found
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -51,11 +51,9 @@ const ProductDetailsPage = () => {
   if (loading) {
     return (
       <Layout>
-        <Container className="py-5 text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </Container>
+        <div className="text-center py-5">
+          <Spinner />
+        </div>
       </Layout>
     );
   }
@@ -67,19 +65,24 @@ const ProductDetailsPage = () => {
       <Container>
         <Row>
           <Col md={6} className="mb-4">
-            <Card
-              data-aos="fade"
-              className="border-0 shadow-none"
-            >
+            <Card className="border-0 shadow-none">
               {product.images?.length > 0 && product.images[0]?.url ? (
-                <Card.Img
+                <motion.img
+                  initial={{ opacity: 0, y: 100 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 1,
+                    delay: 0.1,
+                    type: "spring",
+                    bounce: 0.7,
+                  }}
                   variant="top"
                   src={`http://localhost:8000${product.images[0].url}`}
                   alt={product.images[0]?.alt_text || product.name}
                   className="img-fluid"
                   style={{
-                    maxHeight: "1000px",
-                    objectFit: "contain",
+                    maxHeight: "600px",
+                    objectFit: "cover",
                   }}
                 />
               ) : (
@@ -95,7 +98,7 @@ const ProductDetailsPage = () => {
               )}
             </Card>
           </Col>
-          <Col md={6} className="d-flex flex-column justify-content-center">
+          <Col md={6} className="d-flex flex-colum">
             <div className="sticky-md-top" style={{ top: "2rem" }}>
               <h1 className="mb-3">{product.name}</h1>
               <div className="mb-4">
@@ -129,17 +132,21 @@ const ProductDetailsPage = () => {
                 <h3 className="h5 mb-3">Description</h3>
                 <p className="text-muted">{product.description}</p>
               </div>
-              <div className="d-grid gap-2">
+              <div className="d-flex gap-2">
                 <Button
                   variant="primary"
-                  size="lg"
                   onClick={handleAddToCart}
                   disabled={product.stock === 0}
                 >
+                  <i className="bi bi-cart me-2"></i>
                   {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
                 </Button>
-                <Button variant="outline-dark" onClick={() => navigate("/")}>
-                  Continue Shopping
+                <Button
+                  variant="outline-dark"
+                  onClick={() => navigate("/")}
+                >
+                  <i className="bi bi-arrow-return-left me-2"></i>Continue
+                  Shopping
                 </Button>
               </div>
             </div>

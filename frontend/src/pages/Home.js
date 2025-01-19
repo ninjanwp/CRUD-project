@@ -42,12 +42,11 @@ const Home = () => {
         <h1 className="display-4 fw-semibold">Admin Dashboard</h1>
         <p className="lead text-primary">Manage your store efficiently</p>
         <hr />
-        <Row className="mt-4 flex-wrap justify-content-center align-items-center gap-4">
+        <Row className="mt-4 flex-wrap justify-content-center gap-4">
           {modules.map((module, index) => (
             <Col md={4} key={index}>
               <Card 
-                className="dashboard-card mb-4 h-100 shadow-lg" 
-                data-aos="fade"
+                className="dashboard-card h-100 shadow-lg" 
                 onClick={() => navigate(module.path)}
                 style={{ cursor: 'pointer', transition: 'all .2s ease-in-out' }}
               >

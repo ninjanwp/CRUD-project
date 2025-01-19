@@ -95,7 +95,13 @@
 }
 
 .btn-outline-primary {
+  outline-color: var(--bs-primary) !important;
+  color: var(--bs-primary) !important;
+}
+
+.btn-outline-primary:hover {
   background-color: var(--bs-primary) !important;
+  color: var(--bs-white) !important;
 }
 
 .btn-outline-secondary {
@@ -106,4 +112,57 @@
 .btn-outline-secondary:hover {
   background-color: var(--bs-secondary) !important;
   color: var(--bs-white) !important;
+}
+
+.blurred-bg {
+  backdrop-filter: blur(10px); /* Adjust the blur intensity */
+  background-image: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.5) 0.05rem,
+    transparent 0
+  );
+  background-size: 0.25rem 0.25rem;
+  background-repeat: round;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.blurred-overlay {
+  position: relative;
+}
+
+@keyframes evaporate {
+  0% {
+    backdrop-filter: blur(5px);
+  }
+
+  100% {
+    backdrop-filter: blur(0px);
+    opacity: 0;
+  }
+}
+
+
+
+.blurred-overlay::after {
+  pointer-events: none;
+  content: '';
+  position: absolute;
+  background-color: var(--bs-primary);
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  backdrop-filter: hue-rotate(90deg);
+  mask-image: radial-gradient(
+    circle at center,
+    black 0.09rem,
+    transparent 0
+  );
+  mask-size: 0.25rem 0.25rem;
+  mask-repeat: round;
+  animation: evaporate 0.5s ease-out forwards;
+
+  box-shadow: inset 0 0 30px 30px white;
 }
