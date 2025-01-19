@@ -846,25 +846,151 @@ app.delete("/api/admin/users/:userId", authMiddleware, adminMiddleware, async (r
   }
 });
 
-// Admin routes
+// Admin product routes
 app.get("/api/admin/products", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const [products] = await pool.query(`
       SELECT p.*, 
         GROUP_CONCAT(DISTINCT c.id) as category_ids,
-        GROUP_CONCAT(DISTINCT c.name) as category_names,
-        m.name as manufacturer_name,
-        (SELECT url FROM product_image WHERE product_id = p.id AND is_primary = 1 LIMIT 1) as primary_image
+        GROUP_CONCAT(DISTINCT c.name) as category_names
       FROM product p
       LEFT JOIN product_category pc ON p.id = pc.product_id
       LEFT JOIN category c ON pc.category_id = c.id
-      LEFT JOIN manufacturer m ON p.manufacturer_id = m.id
       GROUP BY p.id
     `);
     
-    res.json(products);
+    res.json({
+      data: products,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/admin/products", authMiddleware, adminMiddleware, async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    
+    const { 
+      name, description, price, stock, categories, images,
+      sku, is_active, is_featured, cost_price, compare_at_price,
+      weight, width, height, length, low_stock_threshold,
+      meta_title, meta_description, manufacturer_id, variants
+    } = req.body;
+
+    const slug = name.toLowerCase().replace(/\s+/g, '-');
+    const dimensions = width && height && length ? `${width}x${height}x${length}` : null;
+
+    const [result] = await conn.query(
+      `INSERT INTO product (
+        name, description, price, stock, slug,
+        sku, is_active, is_featured, cost_price, compare_at_price,
+        weight, dimensions, low_stock_threshold,
+        meta_title, meta_description, manufacturer_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        name, description, price, stock, slug,
+        sku, is_active, is_featured, cost_price, compare_at_price,
+        weight, dimensions, low_stock_threshold,
+        meta_title, meta_description, manufacturer_id
+      ]
+    );
+    
+    const productId = result.insertId;
+    
+    if (categories?.length) {
+      await conn.query(
+        `INSERT INTO product_category (product_id, category_id) VALUES ?`,
+        [categories.map(catId => [productId, catId])]
+      );
+    }
+    
+    if (images?.length) {
+      await conn.query(
+        `INSERT INTO product_image (product_id, url, alt_text, is_primary, display_order) VALUES ?`,
+        [images.map((img, idx) => [productId, img.url, img.alt_text, idx === 0, idx])]
+      );
+    }
+    
+    if (variants?.length) {
+      await Promise.all(variants.map(async variant => {
+        const [variantResult] = await conn.query(
+          `INSERT INTO product_variant (
+            product_id, sku, price, stock, is_active,
+            cost_price, compare_at_price, weight,
+            width, height, length, low_stock_threshold
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            productId, variant.sku, variant.price, variant.stock,
+            variant.is_active, variant.cost_price, variant.compare_at_price,
+            variant.weight, variant.width, variant.height, variant.length,
+            variant.low_stock_threshold
+          ]
+        );
+
+        const variantId = variantResult.insertId;
+
+        if (variant.attributes) {
+          await Promise.all(Object.entries(variant.attributes).map(([attributeId, valueId]) =>
+            conn.query(
+              'INSERT INTO variant_attribute_value (variant_id, attribute_id, value_id) VALUES (?, ?, ?)',
+              [variantId, attributeId, valueId]
+            )
+          ));
+        }
+      }));
+    }
+
+    await conn.commit();
+    res.json({ id: productId, ...req.body });
+  } catch (err) {
+    await conn.rollback();
+    res.status(500).json({ message: err.message });
+  } finally {
+    conn.release();
+  }
+});
+
+app.put("/api/admin/products/:id", authMiddleware, adminMiddleware, async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    
+    const { name, description, price, stock, categories, images, manufacturer_id } = req.body;
+    const productId = req.params.id;
+
+    await conn.query(
+      `UPDATE product SET name=?, description=?, price=?, stock=?, manufacturer_id=?
+       WHERE id=?`,
+      [name, description, price, stock, manufacturer_id, productId]
+    );
+
+    // Update categories
+    await conn.query('DELETE FROM product_category WHERE product_id = ?', [productId]);
+    if (categories?.length) {
+      await conn.query(
+        `INSERT INTO product_category (product_id, category_id) VALUES ?`,
+        [categories.map(catId => [productId, catId])]
+      );
+    }
+
+    // Update images
+    await conn.query('DELETE FROM product_image WHERE product_id = ?', [productId]);
+    if (images?.length) {
+      await conn.query(
+        `INSERT INTO product_image (product_id, url, alt_text, is_primary, display_order) VALUES ?`,
+        [images.map((img, idx) => [productId, img.url, img.alt_text, idx === 0, idx])]
+      );
+    }
+
+    await conn.commit();
+    res.json({ id: productId, ...req.body });
+  } catch (err) {
+    await conn.rollback();
+    res.status(500).json({ message: err.message });
+  } finally {
+    conn.release();
   }
 });
 
@@ -904,7 +1030,7 @@ app.get("/api/admin/attributes", authMiddleware, adminMiddleware, async (req, re
   }
 });
 
-// Public routes
+// Public storefront route
 app.get("/api/storefront/products", async (req, res) => {
   try {
     const [products] = await pool.query(`
@@ -917,6 +1043,62 @@ app.get("/api/storefront/products", async (req, res) => {
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Create manufacturer
+app.post("/api/admin/manufacturers", authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { name, code, contact_name, email, phone, website, address, is_active, notes } = req.body;
+    const [result] = await pool.query(
+      `INSERT INTO manufacturer 
+       (name, code, contact_name, email, phone, website, address, is_active, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, code, contact_name, email, phone, website, address, is_active, notes]
+    );
+    res.json({ id: result.insertId, ...req.body });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      res.status(400).json({ message: 'A manufacturer with this code already exists' });
+    } else {
+      res.status(500).json({ message: err.message });
+    }
+  }
+});
+
+// Update manufacturer
+app.put("/api/admin/manufacturers/:id", authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { name, code, contact_name, email, phone, website, address, is_active, notes } = req.body;
+    await pool.query(
+      `UPDATE manufacturer 
+       SET name=?, code=?, contact_name=?, email=?, phone=?, website=?, address=?, is_active=?, notes=?
+       WHERE id=?`,
+      [name, code, contact_name, email, phone, website, address, is_active, notes, req.params.id]
+    );
+    res.json({ id: req.params.id, ...req.body });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create category
+app.post("/api/admin/categories", authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { name, description, parent_id, display_order, is_active, slug, meta_title, meta_description, image_url } = req.body;
+    const [result] = await pool.query(
+      `INSERT INTO category 
+       (name, description, parent_id, display_order, is_active, slug, meta_title, meta_description, image_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, description, parent_id || null, display_order || 0, is_active, slug, meta_title, meta_description, image_url]
+    );
+    res.json({ id: result.insertId, ...req.body });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      res.status(400).json({ message: 'A category with this slug already exists' });
+    } else {
+      res.status(500).json({ message: err.message });
+    }
   }
 });
 

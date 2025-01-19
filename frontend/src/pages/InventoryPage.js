@@ -21,7 +21,7 @@ const ProductsPage = () => {
       title: 'Products',
       singularTitle: 'Product',
       icon: 'bi-box-seam',
-      endpoint: 'products',
+      endpoint: 'api/admin/products',
       columns: [
         { field: "name", label: "Name" },
         { 
@@ -63,7 +63,7 @@ const ProductsPage = () => {
       title: 'Categories',
       singularTitle: 'Category',
       icon: 'bi-tags',
-      endpoint: 'categories',
+      endpoint: 'api/admin/categories',
       columns: [
         { field: 'name', label: 'Name' },
         { field: 'description', label: 'Description' },
@@ -81,7 +81,7 @@ const ProductsPage = () => {
       title: 'Manufacturers',
       singularTitle: 'Manufacturer',
       icon: 'bi-building',
-      endpoint: 'manufacturers',
+      endpoint: 'api/admin/manufacturers',
       columns: [
         { field: 'name', label: 'Name' },
         { field: 'code', label: 'Code' },
@@ -99,7 +99,7 @@ const ProductsPage = () => {
       title: 'Attributes',
       singularTitle: 'Attribute',
       icon: 'bi-list-check',
-      endpoint: 'attributes',
+      endpoint: 'api/admin/attributes',
       columns: [
         { field: 'name', label: 'Name' },
         { field: 'code', label: 'Code' },
@@ -118,6 +118,8 @@ const ProductsPage = () => {
 
   const {
     data,
+    error,
+    isLoading,
     currentPage,
     setCurrentPage,
     itemsPerPage,
@@ -128,7 +130,23 @@ const ProductsPage = () => {
     refreshData
   } = useTableData(tabs[activeTab].endpoint);
 
+  if (error) {
+    return (
+      <div className="page-content">
+        <div className="alert alert-danger">
+          Failed to load data. Please try again later.
+        </div>
+      </div>
+    );
+  }
+
   const ModalComponent = tabs[activeTab].modal;
+
+  const handleEdit = (item) => {
+    if (!item) return;
+    setEditItem(item);
+    setShowModal(true);
+  };
 
   const handleSubmit = async (formData) => {
     if (isSubmitting) return;
@@ -136,16 +154,12 @@ const ProductsPage = () => {
     setIsSubmitting(true);
     try {
       const endpoint = tabs[activeTab].endpoint;
-      let response;
-      
-      if (editItem) {
-        response = await api.update(endpoint, editItem.id, formData);
-      } else {
-        response = await api.create(endpoint, formData);
-      }
+      const response = editItem 
+        ? await api.update(endpoint, editItem.id, formData)
+        : await api.create(endpoint, formData);
 
       if (response) {
-        toast.success(`${tabs[activeTab].title.slice(0, -1)} ${editItem ? 'updated' : 'created'} successfully`);
+        toast.success(`${tabs[activeTab].singularTitle} ${editItem ? 'updated' : 'created'} successfully`);
         setShowModal(false);
         setEditItem(null);
         refreshData();
@@ -156,11 +170,6 @@ const ProductsPage = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleEdit = (item) => {
-    setEditItem(item);
-    setShowModal(true);
   };
 
   return (
@@ -184,6 +193,7 @@ const ProductsPage = () => {
         title={<><i className={`bi ${tabs[activeTab].icon} me-2`}></i>{tabs[activeTab].title}</>}
         columns={tabs[activeTab].columns}
         data={data}
+        isLoading={isLoading}
         actionButton={
           <Button 
             variant="primary" 
@@ -206,7 +216,7 @@ const ProductsPage = () => {
         className="product-table"
       />
 
-      {showModal && ModalComponent && (
+      {showModal && (
         <ModalComponent
           show={showModal}
           onClose={() => {
@@ -214,8 +224,7 @@ const ProductsPage = () => {
             setEditItem(null);
           }}
           onSubmit={handleSubmit}
-          item={editItem}
-          isSubmitting={isSubmitting}
+          {...(editItem && { [activeTab.slice(0, -1)]: editItem })}
         />
       )}
     </div>

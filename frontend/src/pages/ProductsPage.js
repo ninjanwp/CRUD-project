@@ -21,7 +21,7 @@ const InventoryPage = () => {
       title: 'Products',
       singularTitle: 'Product',
       icon: 'bi-box-seam',
-      endpoint: 'products',
+      endpoint: '/api/admin/products',
       columns: [
         { field: "name", label: "Name" },
         { 

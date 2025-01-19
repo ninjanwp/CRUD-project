@@ -1,85 +1,58 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import api from '../services/api';
 
-const useTableData = (endpoint, defaultItemsPerPage = 10) => {
+const useTableData = (endpoint) => {
   const [data, setData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(defaultItemsPerPage);
+  const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
   const [sortField, setSortField] = useState(null);
-  const [sortDirection, setSortDirection] = useState('asc');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [sortDirection, setSortDirection] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const refreshData = useCallback(async () => {
+  const fetchData = async () => {
+    if (!endpoint) return;
     setIsLoading(true);
     try {
-      const responseData = await api.list(endpoint);
-      const data = Array.isArray(responseData) ? responseData : responseData.data || [];
-      setData(data);
-      setFilteredData(data);
+      const response = await api.list(endpoint);
+      if (response.data && Array.isArray(response.data)) {
+        setData(response.data);
+        setTotalPages(Math.ceil(response.total / itemsPerPage));
+      } else if (Array.isArray(response)) {
+        setData(response);
+        setTotalPages(Math.ceil(response.length / itemsPerPage));
+      } else {
+        setData([]);
+        setTotalPages(1);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       setData([]);
-      setFilteredData([]);
+      setTotalPages(1);
     } finally {
       setIsLoading(false);
     }
-  }, [endpoint]);
+  };
+
+  const handleSort = (field, direction) => {
+    setSortField(field);
+    setSortDirection(direction);
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
 
   useEffect(() => {
-    refreshData();
-  }, [refreshData]);
-
-  const handleSearch = useCallback((term) => {
-    setSearchTerm(term);
-    if (!term.trim()) {
-      setFilteredData(data);
-    } else {
-      const searchResults = data.filter(item => 
-        Object.values(item).some(value => 
-          String(value).toLowerCase().includes(term.toLowerCase())
-        )
-      );
-      setFilteredData(searchResults);
-    }
-    setCurrentPage(1);
-  }, [data]);
-
-  const handleSort = useCallback((sortValue) => {
-    if (!sortValue) return;
-    
-    // Parse the sort value string (e.g., "price-asc" -> { field: "price", direction: "asc" })
-    const [field, direction] = sortValue.split('-');
-    
-    const sortedData = [...filteredData].sort((a, b) => {
-      let aValue = a[field];
-      let bValue = b[field];
-      
-      // Convert to numbers for numeric fields
-      if (field === 'price' || field === 'stock' || field === 'total') {
-        aValue = Number(aValue);
-        bValue = Number(bValue);
-      }
-      
-      if (direction === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-    
-    setFilteredData(sortedData);
-  }, [filteredData]);
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+    fetchData();
+  }, [endpoint, currentPage, itemsPerPage, sortField, sortDirection, searchQuery]);
 
   return {
-    data: paginatedData,
+    data,
+    error,
     isLoading,
     currentPage,
     setCurrentPage,
@@ -88,10 +61,7 @@ const useTableData = (endpoint, defaultItemsPerPage = 10) => {
     totalPages,
     handleSort,
     handleSearch,
-    refreshData,
-    sortField,
-    sortDirection,
-    searchTerm
+    refreshData: fetchData
   };
 };
 

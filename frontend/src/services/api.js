@@ -1,5 +1,6 @@
 import axios from 'axios';
 import auth from './auth';
+import { toast } from 'react-hot-toast';
 
 // Create axios instance with base URL
 const api = axios.create({
@@ -25,101 +26,50 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear invalid auth state
       auth.logout();
-      // Redirect to login if needed
       window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
 
-// Define endpoints exactly as they exist in your backend server.js
-const endpoints = {
-  // Admin routes
-  products: '/api/admin/products',
-  categories: '/api/admin/categories', 
-  manufacturers: '/api/admin/manufacturers',
-  attributes: '/api/admin/attributes',
-  users: '/api/admin/users',
-  orders: '/api/admin/orders',
-  
-  // Public routes
-  storefront: {
-    products: '/api/storefront/products',
-    categories: '/api/categories',
-    manufacturers: '/api/manufacturers'
+// Add API methods to the existing api instance
+Object.assign(api, {
+  async list(endpoint) {
+    console.log('Fetching', endpoint, 'from', this.baseURL);
+    const response = await this.get(`${endpoint}`);
+    return response.data;
   },
-  
-  // Auth endpoints
-  auth: {
-    login: '/api/auth/login',
-    register: '/api/auth/register',
-    profile: '/api/auth/profile'
-  }
-};
 
-export default {
-  list: async (resource) => {
+  async create(endpoint, data) {
     try {
-      console.log(`Fetching ${resource} from ${endpoints[resource]}`);
-      const response = await api.get(endpoints[resource] || resource);
-      console.log(`Response for ${resource}:`, response.data);
+      const response = await this.post(`${endpoint}`, data);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching ${resource}:`, error);
+      console.error('Error creating', endpoint + ':', error);
       throw error;
     }
   },
 
-  get: async (resource, id) => {
+  async update(endpoint, id, data) {
     try {
-      const response = await api.get(`${endpoints[resource]}/${id}`);
+      const response = await this.put(`${endpoint}/${id}`, data);
       return response.data;
     } catch (error) {
-      console.error(`Error getting ${resource}:`, error);
+      console.error('Error updating', endpoint + ':', error);
       throw error;
     }
   },
 
-  create: async (resource, data) => {
+  async delete(endpoint, id) {
     try {
-      const response = await api.post(endpoints[resource], data);
+      const response = await this.delete(`${endpoint}/${id}`);
       return response.data;
     } catch (error) {
-      console.error(`Error creating ${resource}:`, error);
-      throw error;
-    }
-  },
-
-  update: async (resource, id, data) => {
-    try {
-      console.log(`Updating ${resource}/${id} with data:`, data); // Debug log
-      const response = await api.put(`${endpoints[resource]}/${id}`, data);
-      console.log(`Update response:`, response.data); // Debug log
-      return response.data;
-    } catch (error) {
-      console.error(`Error updating ${resource}:`, error);
-      throw error;
-    }
-  },
-
-  delete: async (resource, id) => {
-    try {
-      if (!id) {
-        throw new Error(`No ID provided for ${resource} deletion`);
-      }
-      
-      console.log(`Deleting ${resource} with ID:`, id);
-      const response = await api.delete(`${endpoints[resource]}/${id}`);
-      console.log(`Delete response for ${resource}:`, response.data);
-      return response.data;
-    } catch (error) {
-      console.error(`Error deleting ${resource}:`, error);
-      if (error.response?.status === 404) {
-        console.log(`${resource} with ID ${id} not found`);
-      }
+      console.error('Error deleting', endpoint + ':', error);
       throw error;
     }
   }
-};
+});
+
+export default api;

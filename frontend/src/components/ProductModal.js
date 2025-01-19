@@ -5,6 +5,7 @@ import CategoryModal from './CategoryModal';
 import ManufacturerModal from './ManufacturerModal';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { toast } from 'react-hot-toast';
 
 const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
   const [manufacturers, setManufacturers] = useState([]);
@@ -12,6 +13,8 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
   const [attributes, setAttributes] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('basic');
+  const [tabsWithErrors, setTabsWithErrors] = useState({});
 
   const [formData, setFormData] = useState({
     name: '',
@@ -20,8 +23,8 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
     stock: '',
     manufacturer_id: '',
     sku: '',
-    barcode: '',
-    is_digital: false,
+    is_active: true,
+    is_featured: false,
     cost_price: '',
     compare_at_price: '',
     weight: '',
@@ -29,11 +32,8 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
     height: '',
     length: '',
     low_stock_threshold: '',
-    warranty_info: '',
-    return_policy: '',
-    tax_class: '',
-    is_active: true,
-    is_featured: false,
+    meta_title: '',
+    meta_description: '',
     categories: [],
     images: [{
       url: '',
@@ -59,9 +59,9 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
     if (show) {
       setIsLoading(true);
       Promise.all([
-        api.list('manufacturers'),
-        api.list('categories'), 
-        api.list('attributes')
+        api.list('api/admin/manufacturers'),
+        api.list('api/admin/categories'), 
+        api.list('api/admin/attributes')
       ])
         .then(([mfrs, cats, attrs]) => {
           setManufacturers(mfrs || []);
@@ -99,8 +99,8 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
         stock: '',
         manufacturer_id: '',
         sku: '',
-        barcode: '',
-        is_digital: false,
+        is_active: true,
+        is_featured: false,
         cost_price: '',
         compare_at_price: '',
         weight: '',
@@ -108,11 +108,8 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
         height: '',
         length: '',
         low_stock_threshold: '',
-        warranty_info: '',
-        return_policy: '',
-        tax_class: '',
-        is_active: true,
-        is_featured: false,
+        meta_title: '',
+        meta_description: '',
         categories: [],
         images: [{
           url: '',
@@ -130,6 +127,16 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
       });
     }
   }, [product]);
+
+  useEffect(() => {
+    if (formData.manufacturer_id && formData.categories.length > 0) {
+      const skus = generateSKU();
+      setFormData(prev => ({
+        ...prev,
+        sku: skus ? skus[0] : ''
+      }));
+    }
+  }, [formData.manufacturer_id, formData.categories]);
 
   const handleVariantChange = (index, field, value) => {
     const newVariants = [...formData.variants];
@@ -255,78 +262,98 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
   const validateForm = () => {
     const errors = {};
     
+    // Basic tab
     if (!formData.name) errors.name = 'Name is required';
-    if (!formData.price || formData.price <= 0) errors.price = 'Valid price is required';
-    if (!formData.stock || formData.stock < 0) errors.stock = 'Valid stock is required';
+    if (!formData.price) errors.price = 'Price is required';
+    if (!formData.stock) errors.stock = 'Stock is required';
+    if (!formData.sku) errors.sku = 'SKU is required';
     
-    // Validate variants
-    const variantErrors = [];
-    formData.variants.forEach((variant, index) => {
-      const error = {};
-      if (variant.price && variant.price <= 0) error.price = 'Valid price is required';
-      if (variant.stock && variant.stock < 0) error.stock = 'Valid stock is required';
-      
-      // Check if variant has at least one attribute set
-      if (Object.keys(variant.attributes).length === 0) {
-        error.attributes = 'At least one attribute must be set';
-      }
-      
-      if (Object.keys(error).length > 0) {
-        variantErrors[index] = error;
-      }
-    });
-    
-    if (variantErrors.length > 0) {
-      errors.variants = variantErrors;
-    }
-    
-    if (formData.compare_at_price && formData.compare_at_price <= formData.price) {
-      errors.compare_at_price = 'Compare at price must be higher than regular price';
-    }
-    
-    if (formData.low_stock_threshold && formData.low_stock_threshold < 0) {
-      errors.low_stock_threshold = 'Low stock threshold must be positive';
-    }
-    
-    return errors;
+    // Determine which tabs have errors
+    const newTabsWithErrors = {
+      basic: ['name', 'price', 'stock', 'sku'].some(field => errors[field]),
+      inventory: false,
+      variants: formData.variantAttributes?.length > 0 && 
+        formData.variants.some(v => !v.price || !v.stock)
+    };
+
+    setTabsWithErrors(newTabsWithErrors);
+    return { errors, tabsWithErrors: newTabsWithErrors };
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const errors = validateForm();
     
+    // Validation errors object
+    const errors = {};
+    
+    // Required field validation
+    if (!formData.name?.trim()) errors.name = 'Name is required';
+    if (!formData.price) errors.price = 'Price is required';
+    if (!formData.stock) errors.stock = 'Stock is required';
+    if (!formData.sku?.trim()) errors.sku = 'SKU is required';
+    
+    // Numeric field validation
+    if (formData.price && isNaN(parseFloat(formData.price))) {
+      errors.price = 'Price must be a valid number';
+    }
+    if (formData.stock && isNaN(parseInt(formData.stock))) {
+      errors.stock = 'Stock must be a valid number';
+    }
+    
+    // If there are validation errors, show them and stop submission
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       return;
     }
-    
-    // Generate SKU if not provided
-    const submissionData = {
-      ...formData,
-      sku: formData.sku || generateSKU(),
-      price: parseFloat(formData.price),
-      stock: parseInt(formData.stock),
-      cost_price: formData.cost_price ? parseFloat(formData.cost_price) : null,
-      compare_at_price: formData.compare_at_price ? parseFloat(formData.compare_at_price) : null,
-      weight: formData.weight ? parseFloat(formData.weight) : null,
-      low_stock_threshold: formData.low_stock_threshold ? parseInt(formData.low_stock_threshold) : null,
+
+    // Clear any previous validation errors
+    setValidationErrors({});
+
+    // Format data before submission
+    const formattedData = {
+      name: formData.name.trim(),
+      description: formData.description?.trim() || '',
+      price: parseFloat(formData.price) || 0,
+      stock: parseInt(formData.stock) || 0,
+      sku: formData.sku?.trim() || '',
       is_active: Boolean(formData.is_active),
-      is_featured: Boolean(formData.is_featured)
+      is_featured: Boolean(formData.is_featured),
+      cost_price: parseFloat(formData.cost_price) || 0,
+      compare_at_price: parseFloat(formData.compare_at_price) || 0,
+      weight: parseFloat(formData.weight) || 0,
+      width: parseFloat(formData.width) || 0,
+      height: parseFloat(formData.height) || 0,
+      length: parseFloat(formData.length) || 0,
+      low_stock_threshold: parseInt(formData.low_stock_threshold) || 0,
+      meta_title: formData.meta_title?.trim() || '',
+      meta_description: formData.meta_description?.trim() || '',
+      manufacturer_id: parseInt(formData.manufacturer_id) || null,
+      categories: formData.categories || [],
+      images: formData.images || [],
+      variants: formData.variants || []
     };
-    
-    onSubmit(submissionData);
+
+    onSubmit(formattedData);
   };
 
   const refreshManufacturers = async () => {
-    const response = await fetch('/api/manufacturers');
-    const data = await response.json();
-    setManufacturers(data || []);
+    try {
+      const data = await api.list('api/admin/manufacturers');
+      setManufacturers(data || []);
+    } catch (error) {
+      console.error('Failed to fetch manufacturers:', error);
+      toast.error('Failed to load manufacturers');
+    }
   };
 
   const refreshCategories = async () => {
-    const response = await fetch('/api/categories');
-    const data = await response.json();
-    setCategories(data || []);
+    try {
+      const data = await api.list('api/admin/categories');
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      toast.error('Failed to load categories');
+    }
   };
 
   const handleViewDetails = () => {
@@ -346,17 +373,32 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
         </Modal.Header>
         <Modal.Body style={{ maxHeight: 'calc(100vh - 210px)', overflowY: 'auto' }}>
           <Form onSubmit={handleSubmit}>
-            <Tabs defaultActiveKey="basic" id="product-tabs">
-              <Tab eventKey="basic" title="Basic">
+            <Tabs 
+              activeKey={activeTab} 
+              onSelect={(k) => setActiveTab(k)} 
+              id="product-tabs"
+            >
+              <Tab 
+                eventKey="basic" 
+                title={
+                  <span>
+                    Basic
+                    {tabsWithErrors?.basic && 
+                      <i className="bi bi-exclamation-circle text-danger ms-2"></i>
+                    }
+                  </span>
+                }
+              >
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Name</Form.Label>
+                      <Form.Label>Name <span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({...formData, name: e.target.value})}
                         isInvalid={!!validationErrors.name}
+                        required
                       />
                       <Form.Control.Feedback type="invalid">
                         {validationErrors.name}
@@ -418,35 +460,86 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
 
                 <Row>
                   <Col md={6}>
-                    <Form.Check
-                      type="switch"
-                      label="Active"
-                      checked={formData.is_active}
-                      onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
-                    />
+                    <Form.Group className="mb-3">
+                      <Form.Label>Status</Form.Label>
+                      <div
+                        className="status-toggle"
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            is_active: !formData.is_active
+                          })
+                        }
+                        style={{
+                          '--toggle-position': formData.is_active ? '0' : '100%',
+                          '--toggle-color': formData.is_active ? 'var(--bs-success)' : 'var(--bs-danger)'
+                        }}
+                      >
+                        <div className={`status-option ${formData.is_active ? 'active' : ''}`}>
+                          Active
+                        </div>
+                        <div className={`status-option ${!formData.is_active ? 'active' : ''}`}>
+                          Inactive
+                        </div>
+                      </div>
+                      <Form.Text className="text-muted">
+                        Storefront visibility
+                      </Form.Text>
+                    </Form.Group>
                   </Col>
                   <Col md={6}>
-                    <Form.Check
-                      type="switch"
-                      label="Featured"
-                      checked={formData.is_featured}
-                      onChange={(e) => setFormData({...formData, is_featured: e.target.checked})}
-                    />
+                    <Form.Group className="mb-3">
+                      <Form.Label>Featured Status</Form.Label>
+                      <div
+                        className="status-toggle"
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            is_featured: !formData.is_featured
+                          })
+                        }
+                        style={{
+                          '--toggle-position': formData.is_featured ? '0' : '100%',
+                          '--toggle-color': formData.is_featured ? 'var(--bs-success)' : 'var(--bs-danger)'
+                        }}
+                      >
+                        <div className={`status-option ${formData.is_featured ? 'active' : ''}`}>
+                          Featured
+                        </div>
+                        <div className={`status-option ${!formData.is_featured ? 'active' : ''}`}>
+                          Not Featured
+                        </div>
+                      </div>
+                      <Form.Text className="text-muted">
+                        Shows in featured sections
+                      </Form.Text>
+                    </Form.Group>
                   </Col>
                 </Row>
               </Tab>
 
-              <Tab eventKey="pricing" title="Pricing & Stock">
+              <Tab 
+                eventKey="inventory" 
+                title={
+                  <span>
+                    Inventory
+                    {tabsWithErrors?.inventory && 
+                      <i className="bi bi-exclamation-circle text-danger ms-2"></i>
+                    }
+                  </span>
+                }
+              >
                 <Row>
                   <Col md={4}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Price</Form.Label>
+                      <Form.Label>Price <span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type="number"
                         step="0.01"
                         value={formData.price}
                         onChange={(e) => setFormData({...formData, price: e.target.value})}
                         isInvalid={!!validationErrors.price}
+                        required
                       />
                       <Form.Control.Feedback type="invalid">
                         {validationErrors.price}
@@ -463,6 +556,9 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
                         onChange={(e) => setFormData({...formData, compare_at_price: e.target.value})}
                         isInvalid={!!validationErrors.compare_at_price}
                       />
+                      <Form.Text className="text-muted">
+                        Original price for showing discounts (displayed as strikethrough)
+                      </Form.Text>
                     </Form.Group>
                   </Col>
                   <Col md={4}>
@@ -474,6 +570,9 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
                         value={formData.cost_price}
                         onChange={(e) => setFormData({...formData, cost_price: e.target.value})}
                       />
+                      <Form.Text className="text-muted">
+                        Product cost for internal margin calculations (not visible to customers)
+                      </Form.Text>
                     </Form.Group>
                   </Col>
                 </Row>
@@ -481,12 +580,13 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Stock</Form.Label>
+                      <Form.Label>Stock <span className="text-danger">*</span></Form.Label>
                       <Form.Control
                         type="number"
                         value={formData.stock}
                         onChange={(e) => setFormData({...formData, stock: e.target.value})}
                         isInvalid={!!validationErrors.stock}
+                        required
                       />
                     </Form.Group>
                   </Col>
@@ -498,6 +598,26 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
                         value={formData.low_stock_threshold}
                         onChange={(e) => setFormData({...formData, low_stock_threshold: e.target.value})}
                       />
+                      <Form.Text className="text-muted">
+                        Inventory level that triggers low stock notifications
+                      </Form.Text>
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Row className="mb-3">
+                  <Col md={12}>
+                    <Form.Group>
+                      <Form.Label>SKU</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={formData.sku}
+                        readOnly
+                        placeholder="Auto-generated when manufacturer and category are selected"
+                      />
+                      <Form.Text className="text-muted">
+                        Automatically generated based on manufacturer code and category
+                      </Form.Text>
                     </Form.Group>
                   </Col>
                 </Row>
@@ -555,9 +675,15 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
         show={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
         onSubmit={async (data) => {
-          await api.create('admin/categories', data);
-          setShowCategoryModal(false);
-          refreshCategories();
+          try {
+            const response = await api.create('api/admin/categories', data);
+            toast.success('Category created successfully');
+            setShowCategoryModal(false);
+            const cats = await api.list('api/admin/categories');
+            setCategories(cats || []);
+          } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to create category');
+          }
         }}
       />
 
@@ -565,9 +691,15 @@ const ProductModal = ({ show, product, onClose, onSubmit, onDelete }) => {
         show={showManufacturerModal}
         onClose={() => setShowManufacturerModal(false)}
         onSubmit={async (data) => {
-          await api.create('admin/manufacturers', data);
-          setShowManufacturerModal(false);
-          refreshManufacturers();
+          try {
+            await api.create('api/admin/manufacturers', data);
+            toast.success('Manufacturer created successfully');
+            setShowManufacturerModal(false);
+            const mfrs = await api.list('api/admin/manufacturers');
+            setManufacturers(mfrs || []);
+          } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to create manufacturer');
+          }
         }}
       />
     </>

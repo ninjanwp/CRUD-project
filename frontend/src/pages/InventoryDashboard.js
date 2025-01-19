@@ -58,7 +58,7 @@ const ProductDashboard = () => {
       singularTitle: 'Product Attribute',
       icon: 'bi-list-check',
       color: 'success',
-      endpoint: 'attribute',
+      endpoint: 'attributes',
       columns: [
         { field: 'name', label: 'Name' },
         { field: 'code', label: 'Code' },
