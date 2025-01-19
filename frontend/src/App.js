@@ -19,8 +19,48 @@ import UsersPage from "./pages/admin/UsersPage";
 import InventoryPage from "./pages/InventoryPage";
 import InventoryDashboard from "./pages/InventoryDashboard";
 import { SettingsProvider } from "./context/SettingsContext";
+import React, { useEffect } from "react";
+
+import AOS from "aos";
+import "aos/dist/aos.css";
+
+// Initialize AOS in your App.js useEffect
 
 function App() {
+  useEffect(() => {
+    // Check system preference
+    const darkModeMediaQuery = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    );
+
+      AOS.init({
+        duration: 800,
+        once: true,
+        offset: 100,
+      });
+
+    // Set initial theme
+    document.documentElement.setAttribute(
+      "data-theme",
+      darkModeMediaQuery.matches ? "dark" : "light"
+    );
+
+    // Listen for system theme changes
+    const handleThemeChange = (e) => {
+      document.documentElement.setAttribute(
+        "data-theme",
+        e.matches ? "dark" : "light"
+      );
+    };
+
+    darkModeMediaQuery.addEventListener("change", handleThemeChange);
+
+    // Cleanup
+    return () => {
+      darkModeMediaQuery.removeEventListener("change", handleThemeChange);
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>

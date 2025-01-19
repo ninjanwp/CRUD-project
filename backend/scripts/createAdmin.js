@@ -2,7 +2,7 @@ require("dotenv").config();
 const bcrypt = require("bcrypt");
 const mysql = require("mysql2/promise");
 
-const ADMIN_EMAIL = "admin@example.com";
+const ADMIN_EMAIL = "admin@storefront.com";
 const ADMIN_PASSWORD = "admin123";
 
 async function createAdmin() {

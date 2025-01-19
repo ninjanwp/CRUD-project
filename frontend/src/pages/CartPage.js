@@ -62,7 +62,7 @@ const CartPage = () => {
                         <div>
                           <Link
                             to={`/products/${item.productId}`}
-                            className="text-decoration-none"
+                            className="text-decoration-none text-primary"
                           >
                             <h5 className="mb-1">{item.name}</h5>
                           </Link>

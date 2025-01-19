@@ -19,10 +19,12 @@ const ProductGrid = ({ products }) => {
   };
 
   return (
-    <Row xs={1} md={2} lg={3} className="g-4">
+    <Row xs={1} md={2} lg={3} className="g-5 justify-content-center">
       {products.map((product) => (
         <Col key={product.id}>
-          <Card className="h-100 shadow-sm product-card d-flex flex-column">
+          <Card
+            data-aos="fade"
+            className="h-100 shadow-lg product-card d-flex flex-column pb-2">
             <Link
               to={`/products/${product.id}`}
               className="text-decoration-none flex-grow-1 d-flex flex-column"
@@ -33,9 +35,9 @@ const ProductGrid = ({ products }) => {
                   src={`http://localhost:8000${product.images[0].url}`}
                   alt={product.images[0]?.alt_text || product.name}
                   style={{
-                    height: "200px",
+                    height: "300px",
+                    width: "100%",
                     objectFit: "contain",
-                    padding: "1rem",
                   }}
                 />
               ) : (
@@ -61,7 +63,7 @@ const ProductGrid = ({ products }) => {
                 <span className="h5 mb-0">{formatCurrency(product.price)}</span>
               </div>
               <Button
-                variant="primary"
+                variant="outline-dark"
                 onClick={(e) => {
                   e.preventDefault();
                   handleAddToCart(product);

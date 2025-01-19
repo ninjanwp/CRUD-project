@@ -5,12 +5,13 @@ const cors = require("cors");
 const { pool, checkConnection } = require("./db/connection");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const authMiddleware = require("./middleware/auth");
+const { requireAuth } = require("./middleware/auth");
 const cartDb = require("./db/cart");
 const errorHandler = require("./middleware/errorHandler");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs").promises;
+const cartRoutes = require("./routes/cart");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -114,7 +115,7 @@ app.post("/auth/register", async (req, res) => {
   }
 });
 
-app.get("/auth/validate", authMiddleware, async (req, res) => {
+app.get("/auth/validate", requireAuth, async (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
@@ -192,7 +193,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Image upload endpoint
 app.post(
   "/api/admin/upload",
-  authMiddleware,
+  requireAuth,
   adminMiddleware,
   upload.array("images", 10),
   async (req, res) => {
@@ -240,7 +241,7 @@ const cleanupUnusedImages = async (productId, newImages = []) => {
 // Update product creation endpoint to handle images
 app.post(
   "/api/admin/products",
-  authMiddleware,
+  requireAuth,
   adminMiddleware,
   async (req, res) => {
     const connection = await pool.getConnection();
@@ -388,7 +389,7 @@ app.post(
 // Update a product
 app.put(
   "/api/admin/products/:id",
-  authMiddleware,
+  requireAuth,
   adminMiddleware,
   async (req, res) => {
     const conn = await pool.getConnection();
@@ -606,6 +607,9 @@ const variantRoutes = require("./routes/variants");
 app.use("/api/orders", ordersRouter);
 app.use("/api/variants", variantRoutes);
 
+// Register routes
+app.use("/api/cart", cartRoutes);
+
 // Error handling middleware
 app.use(errorHandler);
 
@@ -694,7 +698,7 @@ app.get("/api/categories", async (req, res) => {
 });
 
 // Add this near your other test routes
-app.get("/api/test-auth", authMiddleware, async (req, res) => {
+app.get("/api/test-auth", requireAuth, async (req, res) => {
   try {
     res.json({
       message: "Auth is working!",
@@ -790,7 +794,7 @@ app.get("/api/products/:id", async (req, res) => {
 });
 
 // Get user's active cart
-app.get("/api/cart", authMiddleware, async (req, res) => {
+app.get("/api/cart", requireAuth, async (req, res) => {
   try {
     console.log("Fetching cart for user:", req.user.id);
     const cart = await cartDb.getActiveCart(req.user.id);
@@ -805,7 +809,7 @@ app.get("/api/cart", authMiddleware, async (req, res) => {
 });
 
 // Add/update cart item
-app.post("/api/cart/items", authMiddleware, async (req, res) => {
+app.post("/api/cart/items", requireAuth, async (req, res) => {
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
@@ -868,7 +872,7 @@ app.post("/api/cart/items", authMiddleware, async (req, res) => {
 });
 
 // Delete cart item
-app.delete("/api/cart/items/:productId", authMiddleware, async (req, res) => {
+app.delete("/api/cart/items/:productId", requireAuth, async (req, res) => {
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
@@ -896,7 +900,7 @@ app.delete("/api/cart/items/:productId", authMiddleware, async (req, res) => {
 });
 
 // User Management Routes
-app.post("/api/users", authMiddleware, async (req, res) => {
+app.post("/api/users", requireAuth, async (req, res) => {
   try {
     const { email, password, role, is_active } = req.body;
 
@@ -937,7 +941,7 @@ app.post("/api/users", authMiddleware, async (req, res) => {
   }
 });
 
-app.put("/api/users/:id", authMiddleware, async (req, res) => {
+app.put("/api/users/:id", requireAuth, async (req, res) => {
   try {
     const { email, role, is_active, first_name, last_name } = req.body;
     const userId = req.params.id;
@@ -988,54 +992,44 @@ app.put("/api/users/:id", authMiddleware, async (req, res) => {
 });
 
 // Admin User Management Routes
-app.post(
-  "/api/admin/users",
-  authMiddleware,
-  adminMiddleware,
-  async (req, res) => {
-    try {
-      const { email, password, role } = req.body;
+app.post("/api/admin/users", requireAuth, adminMiddleware, async (req, res) => {
+  try {
+    const { email, password, role } = req.body;
 
-      const [existing] = await pool.query(
-        "SELECT id FROM user WHERE email = ?",
-        [email]
-      );
+    const [existing] = await pool.query("SELECT id FROM user WHERE email = ?", [
+      email,
+    ]);
 
-      if (existing.length > 0) {
-        return res.status(400).json({ message: "Email already registered" });
-      }
-
-      // Hash password
-      const passwordHash = await bcrypt.hash(password, 10);
-
-      // Create user with correct role value (either 'admin' or 'customer')
-      const [result] = await pool.query(
-        "INSERT INTO user (email, password_hash, role, status) VALUES (?, ?, ?, ?)",
-        [email, passwordHash, role === "admin" ? "admin" : "customer", "active"]
-      );
-
-      res.status(201).json({
-        id: result.insertId,
-        email,
-        role: role === "admin" ? "admin" : "customer",
-      });
-    } catch (error) {
-      console.error("Error creating user:", error);
-      res
-        .status(500)
-        .json({ message: "Failed to create user", error: error.message });
+    if (existing.length > 0) {
+      return res.status(400).json({ message: "Email already registered" });
     }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Create user with correct role value (either 'admin' or 'customer')
+    const [result] = await pool.query(
+      "INSERT INTO user (email, password_hash, role, status) VALUES (?, ?, ?, ?)",
+      [email, passwordHash, role === "admin" ? "admin" : "customer", "active"]
+    );
+
+    res.status(201).json({
+      id: result.insertId,
+      email,
+      role: role === "admin" ? "admin" : "customer",
+    });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to create user", error: error.message });
   }
-);
+});
 
 // Now the middleware can be used in routes
-app.get(
-  "/api/admin/users",
-  authMiddleware,
-  adminMiddleware,
-  async (req, res) => {
-    try {
-      const [users] = await pool.query(`
+app.get("/api/admin/users", requireAuth, adminMiddleware, async (req, res) => {
+  try {
+    const [users] = await pool.query(`
       SELECT 
         u.*,
         COUNT(DISTINCT o.id) as orders_count,
@@ -1048,20 +1042,19 @@ app.get(
       ORDER BY u.created_at DESC
     `);
 
-      res.json(users);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      res
-        .status(500)
-        .json({ message: "Failed to fetch users", error: error.message });
-    }
+    res.json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to fetch users", error: error.message });
   }
-);
+});
 
 // Add this after your other cart routes
 app.get(
   "/api/admin/users/:userId/cart",
-  authMiddleware,
+  requireAuth,
   adminMiddleware,
   async (req, res) => {
     try {
@@ -1081,13 +1074,9 @@ app.get(
   }
 );
 
-app.get(
-  "/api/admin/orders",
-  authMiddleware,
-  adminMiddleware,
-  async (req, res) => {
-    try {
-      const [orders] = await pool.query(`
+app.get("/api/admin/orders", requireAuth, adminMiddleware, async (req, res) => {
+  try {
+    const [orders] = await pool.query(`
       SELECT 
         o.*,
         u.email as user_email,
@@ -1100,19 +1089,18 @@ app.get(
       ORDER BY o.created_at DESC
     `);
 
-      res.json(orders);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      res
-        .status(500)
-        .json({ message: "Failed to fetch orders", error: error.message });
-    }
+    res.json(orders);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to fetch orders", error: error.message });
   }
-);
+});
 
 app.put(
   "/api/admin/users/:userId",
-  authMiddleware,
+  requireAuth,
   adminMiddleware,
   async (req, res) => {
     const conn = await pool.getConnection();
@@ -1156,7 +1144,7 @@ app.put(
 
 app.patch(
   "/api/admin/users/:userId",
-  authMiddleware,
+  requireAuth,
   adminMiddleware,
   async (req, res) => {
     try {
@@ -1176,6 +1164,32 @@ app.patch(
   }
 );
 
+// Update manufacturers endpoint to use admin prefix and auth
+app.get(
+  "/api/admin/manufacturers",
+  requireAuth,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const [rows] = await pool.query(`
+      SELECT 
+        m.*,
+        COUNT(DISTINCT p.id) as products_count
+      FROM manufacturer m
+      LEFT JOIN product p ON m.id = p.manufacturer_id
+      WHERE m.is_active = true 
+      GROUP BY m.id
+      ORDER BY m.name ASC
+    `);
+      res.json(rows);
+    } catch (err) {
+      console.error("Error fetching manufacturers:", err);
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+// Keep the public endpoint for storefront
 app.get("/api/manufacturers", async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -1192,7 +1206,7 @@ app.get("/api/manufacturers", async (req, res) => {
 
 app.delete(
   "/api/admin/users/:userId",
-  authMiddleware,
+  requireAuth,
   adminMiddleware,
   async (req, res) => {
     const conn = await pool.getConnection();
@@ -1256,7 +1270,7 @@ app.delete(
 // Admin product routes
 app.get(
   "/api/admin/products",
-  authMiddleware,
+  requireAuth,
   adminMiddleware,
   async (req, res) => {
     try {

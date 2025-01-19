@@ -33,7 +33,7 @@ const CartPreview = () => {
           <ListGroup.Item key={item.productId} className="py-2">
             <Link
               to={`/products/${item.productId}`}
-              className="text-decoration-none d-flex gap-2"
+              className="text-decoration-none d-flex gap-2 text-primary"
             >
               <Image
                 src={item.image}

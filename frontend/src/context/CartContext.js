@@ -1,12 +1,34 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { useAuth } from "./AuthContext";
-import axios from "axios";
+import apiService from "../services/api";
 
 const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const { isAuthenticated, user } = useAuth();
+
+  const fetchCart = useCallback(async () => {
+    try {
+      console.log("Fetching cart for user:", user?.id);
+      const response = await apiService.list("cart");
+      console.log("Fetched cart response:", response);
+      if (response && Array.isArray(response.items)) {
+        setCart(response.items);
+      } else {
+        setCart([]);
+      }
+    } catch (err) {
+      console.error("Error fetching cart:", err);
+      setCart([]);
+    }
+  }, [user?.id]);
 
   // Fetch cart when auth state changes
   useEffect(() => {
@@ -23,51 +45,27 @@ export const CartProvider = ({ children }) => {
         setCart([]); // Reset cart when logging out
       }
     }
-  }, [isAuthenticated, user?.id]); // Add user?.id as dependency to ensure we have the user data
-
-  const fetchCart = async () => {
-    try {
-      const response = await axios.get("/api/cart");
-      if (response.data && Array.isArray(response.data.items)) {
-        const transformedItems = response.data.items.map((item) => ({
-          productId: item.product_id,
-          name: item.name,
-          price: parseFloat(item.price),
-          image: item.image,
-          description: item.description,
-          stock: parseInt(item.stock),
-          quantity: parseInt(item.quantity),
-        }));
-        setCart(transformedItems);
-      } else {
-        setCart([]);
-      }
-    } catch (err) {
-      console.error("Error fetching cart:", err);
-      setCart([]);
-    }
-  };
+  }, [isAuthenticated, user?.id, fetchCart]);
 
   const addToCart = async (product, quantity = 1) => {
     try {
       if (isAuthenticated && user?.id) {
-        const response = await axios.post("/api/cart/items", {
+        // For authenticated users - use the API
+        console.log("Adding to cart for user:", user?.id, {
           productId: product.id,
           quantity,
         });
-        if (response.data && Array.isArray(response.data.items)) {
-          const transformedItems = response.data.items.map((item) => ({
-            productId: item.product_id,
-            name: item.name,
-            price: parseFloat(item.price),
-            image: item.image,
-            description: item.description,
-            stock: parseInt(item.stock),
-            quantity: parseInt(item.quantity),
-          }));
-          setCart(transformedItems);
+        const response = await apiService.create("cartItems", {
+          productId: product.id,
+          quantity,
+        });
+        console.log("Add to cart response:", response);
+
+        if (response && Array.isArray(response.items)) {
+          setCart(response.items);
         }
       } else {
+        // For guest users - use localStorage
         const existingItem = cart.find((item) => item.productId === product.id);
         const imageUrl =
           product.images?.length > 0 && product.images[0]?.url
@@ -104,20 +102,21 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (productId) => {
     try {
       if (isAuthenticated && user?.id) {
-        const response = await axios.delete(`/api/cart/items/${productId}`);
-        if (response.data && Array.isArray(response.data.items)) {
-          const transformedItems = response.data.items.map((item) => ({
-            productId: item.product_id,
-            name: item.name,
-            price: parseFloat(item.price),
-            image: item.image,
-            description: item.description,
-            stock: parseInt(item.stock),
-            quantity: parseInt(item.quantity),
-          }));
-          setCart(transformedItems);
+        // For authenticated users - use the API
+        console.log(
+          "Removing from cart for user:",
+          user?.id,
+          "product:",
+          productId
+        );
+        const response = await apiService.delete("cartItems", productId);
+        console.log("Remove from cart response:", response);
+
+        if (response && Array.isArray(response.items)) {
+          setCart(response.items);
         }
       } else {
+        // For guest users - use localStorage
         const newCart = cart.filter((item) => item.productId !== productId);
         setCart(newCart);
         localStorage.setItem("guestCart", JSON.stringify(newCart));
@@ -134,23 +133,22 @@ export const CartProvider = ({ children }) => {
       }
 
       if (isAuthenticated && user?.id) {
-        const response = await axios.post("/api/cart/items", {
+        // For authenticated users - use the API
+        console.log("Updating cart quantity for user:", user?.id, {
           productId,
           quantity,
         });
-        if (response.data && Array.isArray(response.data.items)) {
-          const transformedItems = response.data.items.map((item) => ({
-            productId: item.product_id,
-            name: item.name,
-            price: parseFloat(item.price),
-            image: item.image,
-            description: item.description,
-            stock: parseInt(item.stock),
-            quantity: parseInt(item.quantity),
-          }));
-          setCart(transformedItems);
+        const response = await apiService.create("cartItems", {
+          productId,
+          quantity,
+        });
+        console.log("Update quantity response:", response);
+
+        if (response && Array.isArray(response.items)) {
+          setCart(response.items);
         }
       } else {
+        // For guest users - use localStorage
         const newCart = cart.map((item) =>
           item.productId === productId ? { ...item, quantity } : item
         );
@@ -163,23 +161,23 @@ export const CartProvider = ({ children }) => {
   };
 
   // Add function to merge guest cart with user cart on login
-  const mergeGuestCart = async () => {
+  const mergeGuestCart = useCallback(async () => {
     const savedCart = localStorage.getItem("guestCart");
     if (savedCart && isAuthenticated && user?.id) {
       const guestCartItems = JSON.parse(savedCart);
       for (const item of guestCartItems) {
-        await addToCart(item, item.quantity);
+        await addToCart({ id: item.productId, ...item }, item.quantity);
       }
       localStorage.removeItem("guestCart");
     }
-  };
+  }, [isAuthenticated, user?.id, addToCart]);
 
   // Add effect to handle cart merging on login
   useEffect(() => {
     if (isAuthenticated && user?.id) {
       mergeGuestCart();
     }
-  }, [isAuthenticated, user?.id]);
+  }, [isAuthenticated, user?.id, mergeGuestCart]);
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 

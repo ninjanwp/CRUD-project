@@ -26,6 +26,8 @@ const endpoints = {
   categories: "/api/admin/categories",
   manufacturers: "/api/admin/manufacturers",
   attributes: "/api/admin/attributes",
+  cart: "/api/cart",
+  cartItems: "/api/cart/items",
   auth: {
     login: "/auth/login",
     register: "/auth/register",

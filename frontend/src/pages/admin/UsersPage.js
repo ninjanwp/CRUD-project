@@ -345,7 +345,7 @@ const UsersPage = () => {
             border: 1px solid #dee2e6;
             border-radius: 0;
             overflow: hidden;
-            height: calc(100vh - 200px);
+            min-height: 300px;
             overflow-y: auto;
             background: white;
           }

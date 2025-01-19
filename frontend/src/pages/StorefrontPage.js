@@ -29,15 +29,21 @@ const StorefrontPage = () => {
   );
 
   return (
-    <div className="bg-light min-vh-100">
+    <div className="min-vh-100 mb-5">
+      <Col
+        data-aos="fade"
+        className="text-center py-5">
+        <h1 className="display-1 fw-semibold"><i className="bi bi-shop"></i> Storefront</h1>
+        <p className="lead text-primary">Shop with us</p>
+        <hr />
+      </Col>
       <div className="bg-primary text-white py-5 mb-4">
         <Container>
-          <h1 className="display-4 text-center mb-4">Welcome to Storefront</h1>
           <Row className="justify-content-center">
             <Col md={6}>
               <div className="input-group storefront-search">
                 <span className="input-group-text">
-                  <i className="bi bi-search"></i>
+                  <i className="bi bi-search p-2"></i>
                 </span>
                 <Form.Control
                   type="search"

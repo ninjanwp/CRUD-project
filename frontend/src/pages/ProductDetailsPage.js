@@ -64,10 +64,13 @@ const ProductDetailsPage = () => {
 
   return (
     <Layout>
-      <Container className="py-5">
+      <Container>
         <Row>
           <Col md={6} className="mb-4">
-            <Card className="border-0 shadow-sm">
+            <Card
+              data-aos="fade"
+              className="border-0 shadow-none"
+            >
               {product.images?.length > 0 && product.images[0]?.url ? (
                 <Card.Img
                   variant="top"
@@ -75,10 +78,8 @@ const ProductDetailsPage = () => {
                   alt={product.images[0]?.alt_text || product.name}
                   className="img-fluid"
                   style={{
-                    maxHeight: "600px",
-                    width: "100%",
+                    maxHeight: "1000px",
                     objectFit: "contain",
-                    padding: "2rem",
                   }}
                 />
               ) : (
@@ -94,7 +95,7 @@ const ProductDetailsPage = () => {
               )}
             </Card>
           </Col>
-          <Col md={6}>
+          <Col md={6} className="d-flex flex-column justify-content-center">
             <div className="sticky-md-top" style={{ top: "2rem" }}>
               <h1 className="mb-3">{product.name}</h1>
               <div className="mb-4">
@@ -137,10 +138,7 @@ const ProductDetailsPage = () => {
                 >
                   {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
                 </Button>
-                <Button
-                  variant="outline-secondary"
-                  onClick={() => navigate("/")}
-                >
+                <Button variant="outline-dark" onClick={() => navigate("/")}>
                   Continue Shopping
                 </Button>
               </div>
