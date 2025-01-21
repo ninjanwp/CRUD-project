@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
-import ProductsPage from "./pages/InventoryPage";
 import OrdersPage from "./pages/OrdersPage";
 import Home from "./pages/Home";
 import Metrics from "./pages/Metrics";
@@ -17,42 +16,15 @@ import RegisterPage from "./pages/RegisterPage";
 import ProductDetailsPage from "./pages/ProductDetailsPage";
 import UsersPage from "./pages/admin/UsersPage";
 import InventoryPage from "./pages/InventoryPage";
-import InventoryDashboard from "./pages/InventoryDashboard";
 import { SettingsProvider } from "./context/SettingsContext";
 import React, { useEffect } from "react";
-import { motion } from "framer-motion";
 import ScrollToTop from "./components/ScrollToTop";
-import CategoriesPage from "./pages/admin/CategoriesPage";
-
+import ScrollProgress from "./components/ScrollProgress";
 // Initialize AOS in your App.js useEffect
 
 function App() {
   useEffect(() => {
-    // Check system preference
-    const darkModeMediaQuery = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    );
 
-    // Set initial theme
-    document.documentElement.setAttribute(
-      "data-theme",
-      darkModeMediaQuery.matches ? "dark" : "light"
-    );
-
-    // Listen for system theme changes
-    const handleThemeChange = (e) => {
-      document.documentElement.setAttribute(
-        "data-theme",
-        e.matches ? "dark" : "light"
-      );
-    };
-
-    darkModeMediaQuery.addEventListener("change", handleThemeChange);
-
-    // Cleanup
-    return () => {
-      darkModeMediaQuery.removeEventListener("change", handleThemeChange);
-    };
   }, []);
 
   return (
@@ -63,6 +35,7 @@ function App() {
           <CartProvider>
             <AppProvider>
               <MainNav />
+              <ScrollProgress />
               <Layout>
                 <Routes>
                   {/* Public Routes */}
@@ -118,14 +91,6 @@ function App() {
                     element={
                       <ProtectedRoute requireAdmin={true}>
                         <Metrics />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/admin/categories"
-                    element={
-                      <ProtectedRoute requireAdmin={true}>
-                        <CategoriesPage />
                       </ProtectedRoute>
                     }
                   />

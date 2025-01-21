@@ -32,17 +32,43 @@ const StorefrontPage = () => {
   return (
     <div className="min-vh-100 mb-5">
       <Col className="text-center py-5">
-        <h1 className="display-1 fw-semibold">
-          <i className="bi bi-shop"></i> Storefront
-        </h1>
-        <motion.p
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.2, type: "spring", bounce: 0.5 }}
-          className="lead text-primary"
+        <div className="d-flex gap-2 align-items-center justify-content-center">
+          <motion.i
+            layout
+            initial={{ opacity: 0, scale: 2, x: 200 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            transition={{
+              duration: 1,
+              delay: 0,
+              type: "spring",
+              bounce: 0.5,
+            }}
+            className="bi bi-shop display-1 text-dark"
+          ></motion.i>
+          <div className="d-flex flex-column overflow-hidden">
+            <motion.h1
+              initial={{ x: -1000 }}
+              animate={{ x: 0 }}
+              transition={{
+                duration: 1,
+                delay: 0.1,
+                type: "spring",
+                bounce: 0.1,
+              }}
+              className="display-1 fw-semibold text-dark"
+            >
+              Storefront
+            </motion.h1>
+          </div>
+        </div>
+        <motion.i
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 0.8 }}
+          className="text-primary display-6 fw-semibold"
         >
-          Shop with us
-        </motion.p>
+          E-commerce framework
+        </motion.i>
       </Col>
       <div className="bg-primary text-white py-5 mb-4">
         <Container>

@@ -1,7 +1,7 @@
 /* Light theme (default) */
 :root {
   /* Bootstrap color overrides */
-  --bs-primary: #f75e2f;
+  --bs-primary: #503de0;
   --bs-primary-rgb: 47, 129, 247;
   --bs-secondary: #8b949e;
   --bs-secondary-rgb: 139, 148, 158;
@@ -37,46 +37,6 @@
   --table-hover-selected-bg: rgba(var(--bs-primary-rgb), 0.2);
   --table-selected-bg: rgba(var(--bs-primary-rgb), 0.15);
 }
-
-/* Dark theme - GitHub-like */
-[data-theme='dark'] {
-  /* Bootstrap color overrides */
-  --bs-primary: #503de0;
-  --bs-primary-rgb: 47, 129, 247;
-  --bs-secondary: #d2d2d2;
-  --bs-secondary-rgb: 139, 148, 158;
-  --bs-success: #3fb950;
-  --bs-success-rgb: 63, 185, 80;
-  --bs-info: #f75e2f;
-  --bs-info-rgb: 247, 94, 47;
-  --bs-warning: #d4a72c;
-  --bs-warning-rgb: 212, 167, 44;
-  --bs-danger: #cf222e;
-  --bs-danger-rgb: 207, 34, 46;
-  --bs-light: #f6f8fa;
-  --bs-light-rgb: 246, 248, 250;
-  --bs-dark: #24292f;
-  --bs-dark-rgb: 36, 41, 47;
-  
-  /* Theme colors */
-  --bs-body-bg: #ffffff;
-  --bs-body-color: #1F2328;
-  --bs-border-color: #d0d7de;
-  
-  /* Component specific */
-  --bs-card-bg: #ffffff;
-  --bs-input-bg: #ffffff;
-  --bs-table-hover-bg: #f6f8fa;
-  --bs-table-striped-bg: #f6f8fa;
-
-  /* Navbar specific */
-  --navbar-bg: #24292f;
-  --navbar-border: #1b1f24;
-
-  --table-hover-bg: rgba(0, 0, 0, 0.05);
-  --table-hover-selected-bg: rgba(var(--bs-primary-rgb), 0.2);
-  --table-selected-bg: rgba(var(--bs-primary-rgb), 0.15);
-} 
 
 .bg-primary {
   background-color: var(--bs-primary) !important;
@@ -115,7 +75,7 @@
 }
 
 .blurred-bg {
-  backdrop-filter: blur(10px); /* Adjust the blur intensity */
+  backdrop-filter: blur(5px); /* Adjust the blur intensity */
   background-image: radial-gradient(
     circle at center,
     rgba(255, 255, 255, 0.5) 0.05rem,
@@ -123,46 +83,23 @@
   );
   background-size: 0.25rem 0.25rem;
   background-repeat: round;
-  background-color: rgba(255, 255, 255, 0.5);
-}
+  background-color: rgba(255, 255, 255, 0);
 
-.blurred-overlay {
-  position: relative;
-}
-
-@keyframes evaporate {
-  0% {
-    backdrop-filter: blur(5px);
-  }
-
-  100% {
-    backdrop-filter: blur(0px);
-    opacity: 0;
-  }
 }
 
 
+.text-primary {
+  color: var(--bs-primary) !important;
+}
 
-.blurred-overlay::after {
-  pointer-events: none;
-  content: '';
-  position: absolute;
-  background-color: var(--bs-primary);
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  pointer-events: none;
-  backdrop-filter: blur(10px);
-  backdrop-filter: hue-rotate(90deg);
-  mask-image: radial-gradient(
-    circle at center,
-    black 0.09rem,
-    transparent 0
-  );
-  mask-size: 0.25rem 0.25rem;
-  mask-repeat: round;
-  animation: evaporate 0.5s ease-out forwards;
+.text-dark {
+  color: var(--bs-dark) !important;
+}
 
-  box-shadow: inset 0 0 30px 30px white;
+.text-secondary {
+  color: var(--bs-secondary) !important;
+}
+
+[data-theme='dark'] .text-dark {
+  color: var(--bs-white) !important;
 }

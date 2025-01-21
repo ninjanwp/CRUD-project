@@ -68,13 +68,13 @@ const ProductDetailsPage = () => {
             <Card className="border-0 shadow-none">
               {product.images?.length > 0 && product.images[0]?.url ? (
                 <motion.img
-                  initial={{ opacity: 0, y: 100 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
                   transition={{
                     duration: 1,
                     delay: 0.1,
                     type: "spring",
-                    bounce: 0.7,
+                    bounce: 0.5,
                   }}
                   variant="top"
                   src={`http://localhost:8000${product.images[0].url}`}
@@ -99,7 +99,18 @@ const ProductDetailsPage = () => {
             </Card>
           </Col>
           <Col md={6} className="d-flex flex-colum">
-            <div className="sticky-md-top" style={{ top: "2rem" }}>
+            <motion.div
+              className="sticky-md-top"
+              style={{ top: "2rem" }}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{
+                duration: 1,
+                delay: 0.1,
+                type: "spring",
+                bounce: 0.5,
+              }}
+            >
               <h1 className="mb-3">{product.name}</h1>
               <div className="mb-4">
                 <h2 className="h3 text-primary mb-2">
@@ -141,15 +152,12 @@ const ProductDetailsPage = () => {
                   <i className="bi bi-cart me-2"></i>
                   {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
                 </Button>
-                <Button
-                  variant="outline-dark"
-                  onClick={() => navigate("/")}
-                >
+                <Button variant="outline-dark" onClick={() => navigate("/")}>
                   <i className="bi bi-arrow-return-left me-2"></i>Continue
                   Shopping
                 </Button>
               </div>
-            </div>
+            </motion.div>
           </Col>
         </Row>
       </Container>

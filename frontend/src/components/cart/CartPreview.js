@@ -9,7 +9,7 @@ const CartPreview = () => {
 
   if (!cart.length) {
     return (
-      <Card className="cart-preview shadow">
+      <Card className="d-flex flex-column justify-content-center align-items-center cart-preview shadow mt-3">
         <Card.Body className="text-center p-4">
           <i className="bi bi-cart3 display-6 text-muted"></i>
           <p className="text-muted mt-2 mb-0">Your cart is empty</p>
