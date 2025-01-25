@@ -2,9 +2,8 @@ import React from "react";
 import { Row, Col, Card, Button } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { formatCurrency } from "../../utils/formatters";
-import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
-
+import { motion } from "framer-motion";
 const ProductGrid = ({ products }) => {
   const { addToCart, cart } = useCart();
   const navigate = useNavigate();
@@ -22,8 +21,11 @@ const ProductGrid = ({ products }) => {
     <Row xs={1} md={2} lg={3} className="g-5 justify-content-center">
       {products.map((product) => (
         <Col key={product.id}>
-          <Card
-            className="h-100 shadow-lg product-card d-flex flex-column pb-2">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="h-100 shadow-lg product-card d-flex flex-column p-3">
             <Link
               to={`/products/${product.id}`}
               className="text-decoration-none flex-grow-1 d-flex flex-column"
@@ -77,7 +79,7 @@ const ProductGrid = ({ products }) => {
                 <i className="bi bi-cart ms-2"></i>
               </Button>
             </Card.Footer>
-          </Card>
+          </motion.div>
         </Col>
       ))}
     </Row>
